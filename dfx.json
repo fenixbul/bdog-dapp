@@ -1,0 +1,22 @@
+{
+    "canisters": {
+        "site": {
+            "type": "assets",
+            "frontend": {
+                "entrypoint": "out/index.html"
+            },
+            "source": [
+                "out"
+            ]
+        },
+        "site_preprod": {
+            "type": "assets",
+            "frontend": {
+                "entrypoint": "out/index.html"
+            },
+            "source": [
+                "out"
+            ]
+        }
+    }
+}

@@ -1,0 +1,257 @@
+'use client';
+
+import React from 'react';
+import { Button } from "@/components/ui";
+import { 
+  Shield, 
+  Users, 
+  Zap, 
+  Volume2,
+  TrendingUp, 
+  MessageCircle,
+  ArrowRight,
+  Sparkles,
+  AlertTriangle
+} from "lucide-react";
+
+export default function InvestorHandout() {
+  const scrollToSection = (sectionId: string) => {
+    const element = document.getElementById(sectionId);
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+
+  return (
+    <div className="bg-black text-white min-h-screen">
+      {/* Hero Section */}
+      <section className="min-h-screen flex items-center justify-center relative overflow-hidden">
+        {/* Animated background elements */}
+        <div className="absolute inset-0 opacity-10">
+          <div className="absolute top-1/4 left-1/4 w-2 h-2 bg-[#00ff9e] rounded-full animate-pulse"></div>
+          <div className="absolute top-3/4 right-1/4 w-1 h-1 bg-[#00ff9e] rounded-full animate-pulse delay-1000"></div>
+          <div className="absolute bottom-1/4 left-1/3 w-1.5 h-1.5 bg-[#00ff9e] rounded-full animate-pulse delay-500"></div>
+          <div className="absolute top-1/2 right-1/3 w-1 h-1 bg-[#00ff9e] rounded-full animate-pulse delay-700"></div>
+        </div>
+        
+        <div className="text-center z-10 max-w-5xl mx-auto px-6">
+          {/* Logo/Brand Icon */}
+          <div className="relative mb-12">
+            <div className="inline-flex items-center justify-center w-28 h-28 bg-gradient-to-br from-[#00ff9e] to-[#00cc7a] rounded-full mb-8 animate-bounce">
+              <Shield className="w-14 h-14 text-black" />
+            </div>
+            <Sparkles className="absolute -top-3 -right-3 w-10 h-10 text-[#00ff9e] animate-pulse" />
+          </div>
+          
+          {/* 7-Second Hook */}
+          <h1 className="text-6xl md:text-8xl font-bold mb-8 bg-gradient-to-r from-[#00ff9e] to-[#00cc7a] bg-clip-text text-transparent">
+            BDOG
+          </h1>
+          <h2 className="text-3xl md:text-5xl font-bold mb-8 text-white">
+            The Brand That Brings BOB Back
+          </h2>
+          
+          {/* Investor Message */}
+          <p className="text-2xl md:text-3xl text-[#00ff9e] mb-16 font-bold">
+            Silence kills projects. BDOG brings them back.
+          </p>
+          
+          {/* Quick Navigation */}
+          <div className="flex flex-col sm:flex-row gap-6 justify-center mb-16">
+            <Button 
+              variant="primary" 
+              className="px-12 py-6 text-xl font-bold"
+              onClick={() => scrollToSection('the-problem')}
+            >
+              See The Problem
+              <ArrowRight className="w-6 h-6 ml-3" />
+            </Button>
+            <Button 
+              variant="secondary" 
+              className="px-12 py-6 text-xl font-bold border-2 border-[#00ff9e] text-[#00ff9e] hover:bg-[#00ff9e] hover:text-black"
+              onClick={() => scrollToSection('join-pack')}
+            >
+              Join the Pack
+            </Button>
+          </div>
+          
+          {/* Scroll indicator */}
+          <div className="animate-bounce">
+            <div className="w-8 h-12 border-2 border-[#00ff9e] rounded-full flex justify-center mx-auto">
+              <div className="w-1.5 h-4 bg-[#00ff9e] rounded-full mt-2 animate-pulse"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* The Problem */}
+      <section id="the-problem" className="py-24 px-6 bg-gradient-to-b from-black to-red-950">
+        <div className="max-w-4xl mx-auto text-center">
+          <div className="mb-16">
+            <div className="inline-flex items-center justify-center w-24 h-24 bg-red-900 rounded-full mb-8 border-4 border-red-600">
+              <AlertTriangle className="w-12 h-12 text-red-400" />
+            </div>
+            <h2 className="text-5xl md:text-6xl font-bold mb-12 text-red-400">
+              Silence Kills Projects
+            </h2>
+          </div>
+          
+          {/* Quick Impact */}
+          <div className="space-y-8 mb-16">
+            <p className="text-3xl md:text-4xl font-bold text-white">
+              BOB went silent. Holders scattered.
+            </p>
+            <p className="text-3xl md:text-4xl font-bold text-white">
+              No voice means no future.
+            </p>
+          </div>
+          
+          {/* Solution Preview */}
+          <div className="text-center">
+            <Button 
+              variant="primary" 
+              className="px-12 py-6 text-xl font-bold"
+              onClick={() => scrollToSection('what-bdog-does')}
+            >
+              The BDOG Solution
+              <ArrowRight className="w-6 h-6 ml-3" />
+            </Button>
+          </div>
+        </div>
+      </section>
+
+      {/* What BDOG Does */}
+      <section id="what-bdog-does" className="py-24 px-6 bg-gradient-to-b from-red-950 to-black">
+        <div className="max-w-5xl mx-auto">
+          <div className="text-center mb-20">
+            <h2 className="text-5xl md:text-6xl font-bold mb-12 text-[#00ff9e]">
+              What BDOG Does
+            </h2>
+          </div>
+          
+          {/* Three Core Actions */}
+          <div className="grid md:grid-cols-3 gap-8 mb-16">
+            <div className="text-center group">
+              <div className="w-24 h-24 bg-[#00ff9e] rounded-full flex items-center justify-center mx-auto mb-8 group-hover:scale-110 transition-transform">
+                <Volume2 className="w-12 h-12 text-black" />
+              </div>
+              <h3 className="text-3xl font-bold text-[#00ff9e] mb-4">Voice</h3>
+              <p className="text-xl text-white">BOB speaks again</p>
+            </div>
+            
+            <div className="text-center group">
+              <div className="w-24 h-24 bg-[#00ff9e] rounded-full flex items-center justify-center mx-auto mb-8 group-hover:scale-110 transition-transform">
+                <Zap className="w-12 h-12 text-black" />
+              </div>
+              <h3 className="text-3xl font-bold text-[#00ff9e] mb-4">Energy</h3>
+              <p className="text-xl text-white">Hype that never stops</p>
+            </div>
+            
+            <div className="text-center group">
+              <div className="w-24 h-24 bg-[#00ff9e] rounded-full flex items-center justify-center mx-auto mb-8 group-hover:scale-110 transition-transform">
+                <Users className="w-12 h-12 text-black" />
+              </div>
+              <h3 className="text-3xl font-bold text-[#00ff9e] mb-4">Unity</h3>
+              <p className="text-xl text-white">Pack moves together</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Member Value */}
+      <section className="py-24 px-6 bg-gray-950">
+        <div className="max-w-4xl mx-auto">
+          <div className="text-center mb-20">
+            <h2 className="text-5xl md:text-6xl font-bold mb-12 text-[#00ff9e]">
+              Member Value
+            </h2>
+          </div>
+          
+          {/* Three Key Benefits */}
+          <div className="space-y-8 mb-16">
+            <div className="text-center bg-black p-8 rounded-lg border border-[#00ff9e]">
+              <p className="text-2xl font-bold text-white">
+                Always know what's happening with BOB
+              </p>
+            </div>
+            
+            <div className="text-center bg-black p-8 rounded-lg border border-[#00ff9e]">
+              <p className="text-2xl font-bold text-white">
+                Move with coordinated community power
+              </p>
+            </div>
+            
+            <div className="text-center bg-black p-8 rounded-lg border border-[#00ff9e]">
+              <p className="text-2xl font-bold text-white">
+                Be part of BOB's comeback story
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* The Promise & CTA */}
+      <section id="join-pack" className="py-24 px-6 bg-gradient-to-b from-gray-950 to-black">
+        <div className="max-w-4xl mx-auto text-center">
+          {/* Promise */}
+          <div className="mb-20">
+            <h2 className="text-5xl md:text-6xl font-bold mb-16 text-[#00ff9e]">
+              The Promise
+            </h2>
+            
+            <div className="space-y-8 mb-16">
+              <p className="text-3xl md:text-4xl font-bold text-white">
+                We bring the holders back.
+              </p>
+              <p className="text-3xl md:text-4xl font-bold text-white">
+                We bring the narrative back.
+              </p>
+              <p className="text-3xl md:text-4xl font-bold text-[#00ff9e]">
+                We bring BOB back.
+              </p>
+            </div>
+          </div>
+          
+          {/* CTA */}
+          <div className="bg-black p-16 rounded-lg border-4 border-[#00ff9e]">
+            <h3 className="text-4xl md:text-5xl font-bold mb-12 text-[#00ff9e]">
+              Join the Pack
+            </h3>
+            
+            <div className="flex flex-col sm:flex-row gap-6 justify-center">
+              <a 
+                href="https://t.me/bobDOGicp" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="inline-block"
+              >
+                <Button 
+                  variant="primary" 
+                  className="px-16 py-8 text-2xl font-bold"
+                >
+                  Join Telegram
+                  <MessageCircle className="w-8 h-8 ml-4" />
+                </Button>
+              </a>
+              
+              <a 
+                href="https://app.icpswap.com/swap/pro?input=ryjl3-tyaaa-aaaaa-aaaba-cai&output=2qqix-tiaaa-aaaam-qeria-cai"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-block"
+              >
+                <Button 
+                  variant="secondary" 
+                  className="px-16 py-8 text-2xl font-bold border-2 border-[#00ff9e] text-[#00ff9e] hover:bg-[#00ff9e] hover:text-black"
+                >
+                  Buy $BDOG
+                  <TrendingUp className="w-8 h-8 ml-4" />
+                </Button>
+              </a>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+  );
+}
