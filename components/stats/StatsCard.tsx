@@ -42,7 +42,7 @@ export const StatsCard: React.FC = () => {
               : "text-gray-500 hover:text-gray-300 hover:bg-gray-900/10"
           )}
         >
-          BDOG
+          $BDOG
           {activeTab === 'BDOG' && (
             <div className="absolute bottom-0 left-0 w-full h-0.5 bg-[hsl(158,100%,50%)]" />
           )}

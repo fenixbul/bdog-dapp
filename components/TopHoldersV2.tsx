@@ -30,9 +30,6 @@ const TopHoldersV2 = ({
 
   // Get label for special principals
   const getPrincipalLabel = (owner: string) => {
-    if (owner === "qdzln-ab4cf-cwgaa-nyzus-x3gag-o7kxy-ktiew-jtwrb-pmit5-m6txi-cqe") {
-      return "DEV";
-    }
     if (owner === ICS_POOL_PRINCIPAL) {
       return "ICS POOL";
     }
