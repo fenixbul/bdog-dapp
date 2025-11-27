@@ -5,6 +5,7 @@ import { Inter } from 'next/font/google'
 import { Footer, Header } from "../components/layout";
 import { Toaster } from "@/components/ui";
 import { TooltipProvider } from "@/components/ui";
+import { AuthProvider } from "@/components/auth/AuthProvider";
 
 const inter = Inter({
   subsets: ['latin'],
@@ -80,10 +81,12 @@ export default function RootLayout({
       </head>
       <body className="bg-background">
         <TooltipProvider>
-          {/* <Header /> */}
-          {children}
-          {/* <Footer /> */}
-          {/* <Toaster /> */}
+          <AuthProvider>
+            {/* <Header /> */}
+            {children}
+            {/* <Footer /> */}
+            {/* <Toaster /> */}
+          </AuthProvider>
         </TooltipProvider>
       </body>
     </html>

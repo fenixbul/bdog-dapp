@@ -13,6 +13,7 @@ import {
   SheetTrigger,
   Separator,
 } from "@/components/ui";
+import { AuthButton } from "@/components/auth/AuthButton";
 
 interface HeaderProps {
   sticky?: boolean;
@@ -38,15 +39,6 @@ const Header = ({ sticky = false }: HeaderProps) => {
         <nav className="flex items-center justify-between py-4 md:py-6">
           {/* Logo and Main Navigation */}
           <div className="flex items-center space-x-8">
-            {/* Logo */}
-            <Link href="/" className="flex-shrink-0">
-              <img
-                className="w-[180px] relative bottom-[4px]"
-                src="/images/logo.webp"
-                alt="BOBDOG"
-              />
-            </Link>
-
             {/* Desktop Navigation */}
             <div className="hidden md:flex items-center space-x-6">
               {navigationLinks.map((link) => (
@@ -63,28 +55,7 @@ const Header = ({ sticky = false }: HeaderProps) => {
 
           {/* Desktop Buttons */}
           <div className="hidden md:flex items-center space-x-4">
-            {/* <Button variant="ghost" asChild>
-              <a 
-                href="" 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="hover:text-cta"
-              >
-                Secondary link
-              </a>
-            </Button> */}
-            <Button
-              variant="primary"
-              asChild
-            >
-              <Link
-                href="https://t.me/+qG7fjAl4snQxNzU8"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                Join Telegram
-              </Link>
-            </Button>
+            <AuthButton />
           </div>
 
           {/* Mobile Menu */}
@@ -123,21 +94,9 @@ const Header = ({ sticky = false }: HeaderProps) => {
                   ))}
                   <Separator className="my-4 bg-border" />
                   <div className="space-y-4">
-                    {/* <Button
-                      variant="ghost"
-                      asChild
-                      className="w-full justify-start"
-                    >
-                      <a
-                        href=""
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        onClick={handleCloseMobileMenu}
-                        className="hover:text-cta"
-                      >
-                        Secondary link
-                      </a>
-                    </Button> */}
+                    <div className="flex justify-center">
+                      <AuthButton />
+                    </div>
                     <Button
                       variant="primary"
                       className="w-full"
