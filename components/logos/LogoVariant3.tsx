@@ -34,11 +34,11 @@ const LogoVariant3 = ({ className = '' }: LogoVariant3Props) => {
         </div>
         
         {/* Subtitle */}
-        <div className="text-center mt-3">
+        {/* <div className="text-center mt-3">
           <div className="text-sm italic text-gray-600 font-medium uppercase tracking-wide">
             "unite and build"
           </div>
-        </div>
+        </div> */}
       </div>
     </div>
   );
