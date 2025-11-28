@@ -20,14 +20,14 @@ export default function DiceGamePage() {
     switch (currentScreen) {
       case 'entry':
         return <EntryScreen />;
-      case 'lobby':
-        return <LobbyScreen />;
-      case 'room':
-        return <RoomScreen />;
-      case 'play':
-        return <PlayScreen />;
-      case 'result':
-        return <ResultScreen />;
+    //   case 'lobby':
+    //     return <LobbyScreen />;
+    //   case 'room':
+    //     return <RoomScreen />;
+    //   case 'play':
+    //     return <PlayScreen />;
+    //   case 'result':
+    //     return <ResultScreen />;
       default:
         return <EntryScreen />;
     }

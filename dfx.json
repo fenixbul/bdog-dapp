@@ -1,5 +1,17 @@
 {
     "canisters": {
+        "players": {
+            "main": "canisters/players.mo",
+            "type": "motoko"
+        },
+        "lobbies": {
+            "main": "canisters/lobbies.mo",
+            "type": "motoko"
+        },
+        "games": {
+            "main": "canisters/games.mo",
+            "type": "motoko"
+        },
         "site": {
             "type": "assets",
             "frontend": {
@@ -17,6 +29,11 @@
             "source": [
                 "out"
             ]
+        }
+    },
+    "defaults": {
+        "build": {
+            "packtool": "mops sources"
         }
     }
 }
