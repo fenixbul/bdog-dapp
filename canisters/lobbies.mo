@@ -256,6 +256,381 @@ shared ({ caller = initializer }) persistent actor class Lobbies() = this {
     };
   };
 
+  // Update room - invite or remove invited player (only if WaitingForPlayers)
+  public shared (msg) func update_room(roomId : Lobby.RoomId, action : { #invite : Principal; #remove : Principal }) : async Result.Result<Lobby.Room, shared_types.Error> {
+    // Reject anonymous callers
+    if (Principal.isAnonymous(msg.caller)) {
+      return #err(#Unauthorized);
+    };
+
+    // Check if room exists
+    let roomOpt = Map.get(rooms, nhash, roomId);
+    switch (roomOpt) {
+      case (null) {
+        return #err(#RoomNotFound);
+      };
+      case (?room) {
+        // Check if caller is room owner or authorized
+        let isOwner = room.owner == msg.caller;
+        let isAuthorized = accessControl.isAuthorized(msg.caller, authorizedPrincipals);
+        if (not isOwner and not isAuthorized) {
+          return #err(#Unauthorized);
+        };
+
+        // Check if room is in WaitingForPlayers status
+        if (room.status != #WaitingForPlayers) {
+          return #err(#InvalidState);
+        };
+
+        // Handle invite or remove action
+        switch (action) {
+          case (#invite(player)) {
+            // Reject anonymous player
+            if (Principal.isAnonymous(player)) {
+              return #err(#Unauthorized);
+            };
+
+            // Prevent self-invite
+            if (player == msg.caller) {
+              return #err(#InvalidState);
+            };
+
+            // Check if player is already in the room (player1 or player2)
+            let isPlayer1 = switch (room.player1) {
+              case (?slot) { slot.principal == player };
+              case (null) { false };
+            };
+            let isPlayer2 = switch (room.player2) {
+              case (?slot) { slot.principal == player };
+              case (null) { false };
+            };
+            if (isPlayer1 or isPlayer2) {
+              return #err(#AlreadyInRoom);
+            };
+
+            // Check if player is already in another room
+            let playerRoom = Map.get(playerToRoom, phash, player);
+            switch (playerRoom) {
+              case (?_) {
+                return #err(#AlreadyInRoom);
+              };
+              case (null) {};
+            };
+
+            // Check if already invited
+            let existingInvitations = Map.get(invitationsByUser, phash, player);
+            switch (existingInvitations) {
+              case (?invites) {
+                // Check if already invited to this room
+                for (invite in invites.vals()) {
+                  if (invite == roomId) {
+                    return #err(#AlreadyInRoom);
+                  };
+                };
+              };
+              case (null) {};
+            };
+
+            // Add to invitations
+            let updatedInvitations = switch (existingInvitations) {
+              case (?invites) {
+                let newList = Buffer.Buffer<Lobby.RoomId>(invites.size() + 1);
+                for (invite in invites.vals()) {
+                  newList.add(invite);
+                };
+                newList.add(roomId);
+                Buffer.toArray(newList);
+              };
+              case (null) {
+                [roomId];
+              };
+            };
+            Map.set(invitationsByUser, phash, player, updatedInvitations);
+
+            // Update allowedPlayers list
+            let updatedAllowedPlayers = switch (room.allowedPlayers) {
+              case (?allowed) {
+                // Check if player already in allowed list
+                var alreadyAllowed = false;
+                for (p in allowed.vals()) {
+                  if (p == player) {
+                    alreadyAllowed := true;
+                  };
+                };
+                if (alreadyAllowed) {
+                  room.allowedPlayers;
+                } else {
+                  // Add player to allowed list
+                  let newList = Buffer.Buffer<Principal>(allowed.size() + 1);
+                  for (p in allowed.vals()) {
+                    newList.add(p);
+                  };
+                  newList.add(player);
+                  ?Buffer.toArray(newList);
+                };
+              };
+              case (null) {
+                // Create new allowed list with this player
+                ?[player];
+              };
+            };
+
+            // Update room
+            let updatedRoom = {
+              room with allowedPlayers = updatedAllowedPlayers;
+            };
+            Map.set(rooms, nhash, roomId, updatedRoom);
+            
+            // Update room in Buffer
+            var i = 0;
+            while (i < activeRooms.size()) {
+              if (activeRooms.get(i).id == roomId) {
+                activeRooms.put(i, updatedRoom);
+              };
+              i += 1;
+            };
+
+            return #ok(updatedRoom);
+          };
+          case (#remove(player)) {
+            // Check if player is actually in the room (can't remove joined players)
+            let isPlayer1 = switch (room.player1) {
+              case (?slot) { slot.principal == player };
+              case (null) { false };
+            };
+            let isPlayer2 = switch (room.player2) {
+              case (?slot) { slot.principal == player };
+              case (null) { false };
+            };
+            if (isPlayer1 or isPlayer2) {
+              return #err(#InvalidState);
+            };
+
+            // Remove from invitations
+            let existingInvitations = Map.get(invitationsByUser, phash, player);
+            switch (existingInvitations) {
+              case (?invites) {
+                let filtered = Buffer.Buffer<Lobby.RoomId>(0);
+                var found = false;
+                for (invite in invites.vals()) {
+                  if (invite == roomId) {
+                    found := true;
+                  } else {
+                    filtered.add(invite);
+                  };
+                };
+                if (found) {
+                  let updatedInvites = Buffer.toArray(filtered);
+                  if (updatedInvites.size() > 0) {
+                    Map.set(invitationsByUser, phash, player, updatedInvites);
+                  } else {
+                    Map.delete(invitationsByUser, phash, player);
+                  };
+                } else {
+                  // Player not invited, nothing to remove
+                  return #err(#InvalidState);
+                };
+              };
+              case (null) {
+                // Player not invited, nothing to remove
+                return #err(#InvalidState);
+              };
+            };
+
+            // Update allowedPlayers list
+            let updatedAllowedPlayers = switch (room.allowedPlayers) {
+              case (?allowed) {
+                let filtered = Buffer.Buffer<Principal>(0);
+                var found = false;
+                for (p in allowed.vals()) {
+                  if (p == player) {
+                    found := true;
+                  } else {
+                    filtered.add(p);
+                  };
+                };
+                if (found) {
+                  let updated = Buffer.toArray(filtered);
+                  if (updated.size() > 0) {
+                    ?updated;
+                  } else {
+                    null; // No allowed players left, remove restriction
+                  };
+                } else {
+                  room.allowedPlayers; // Player not in list, no change
+                };
+              };
+              case (null) {
+                null; // No allowed players list, nothing to remove
+              };
+            };
+
+            // Update room
+            let updatedRoom = {
+              room with allowedPlayers = updatedAllowedPlayers;
+            };
+            Map.set(rooms, nhash, roomId, updatedRoom);
+            
+            // Update room in Buffer
+            var i = 0;
+            while (i < activeRooms.size()) {
+              if (activeRooms.get(i).id == roomId) {
+                activeRooms.put(i, updatedRoom);
+              };
+              i += 1;
+            };
+
+            return #ok(updatedRoom);
+          };
+        };
+      };
+    };
+  };
+
+  // Remove room (only if WaitingForPlayers and caller is owner)
+  public shared (msg) func remove_room(roomId : Lobby.RoomId) : async Result.Result<(), shared_types.Error> {
+    // Reject anonymous callers
+    if (Principal.isAnonymous(msg.caller)) {
+      return #err(#Unauthorized);
+    };
+
+    // Check if room exists
+    let roomOpt = Map.get(rooms, nhash, roomId);
+    switch (roomOpt) {
+      case (null) {
+        return #err(#RoomNotFound);
+      };
+      case (?room) {
+        // Check if caller is room owner
+        if (room.owner != msg.caller) {
+          return #err(#Unauthorized);
+        };
+
+        // Check if room is in WaitingForPlayers status
+        if (room.status != #WaitingForPlayers) {
+          return #err(#InvalidState);
+        };
+
+        // Remove from rooms Map
+        Map.delete(rooms, nhash, roomId);
+
+        // Remove from activeRooms Buffer
+        var i = 0;
+        while (i < activeRooms.size()) {
+          if (activeRooms.get(i).id == roomId) {
+            ignore activeRooms.remove(i);
+          } else {
+            i += 1;
+          };
+        };
+
+        // Remove from playerToRoom tracking
+        switch (room.player1) {
+          case (?slot) {
+            Map.delete(playerToRoom, phash, slot.principal);
+          };
+          case (null) {};
+        };
+        switch (room.player2) {
+          case (?slot) {
+            Map.delete(playerToRoom, phash, slot.principal);
+          };
+          case (null) {};
+        };
+
+        // Remove from invitations tracking
+        switch (room.player1) {
+          case (?slot) {
+            let invites = Map.get(invitationsByUser, phash, slot.principal);
+            switch (invites) {
+              case (?inviteList) {
+                let filtered = Buffer.Buffer<Lobby.RoomId>(0);
+                for (invite in inviteList.vals()) {
+                  if (invite != roomId) {
+                    filtered.add(invite);
+                  };
+                };
+                let updated = Buffer.toArray(filtered);
+                if (updated.size() > 0) {
+                  Map.set(invitationsByUser, phash, slot.principal, updated);
+                } else {
+                  Map.delete(invitationsByUser, phash, slot.principal);
+                };
+              };
+              case (null) {};
+            };
+          };
+          case (null) {};
+        };
+        switch (room.player2) {
+          case (?slot) {
+            let invites = Map.get(invitationsByUser, phash, slot.principal);
+            switch (invites) {
+              case (?inviteList) {
+                let filtered = Buffer.Buffer<Lobby.RoomId>(0);
+                for (invite in inviteList.vals()) {
+                  if (invite != roomId) {
+                    filtered.add(invite);
+                  };
+                };
+                let updated = Buffer.toArray(filtered);
+                if (updated.size() > 0) {
+                  Map.set(invitationsByUser, phash, slot.principal, updated);
+                } else {
+                  Map.delete(invitationsByUser, phash, slot.principal);
+                };
+              };
+              case (null) {};
+            };
+          };
+          case (null) {};
+        };
+
+        // Also clean up any other players who might have been invited
+        // (check allowedPlayers if it exists)
+        switch (room.allowedPlayers) {
+          case (?allowed) {
+            for (player in allowed.vals()) {
+              // Skip if player is already player1 or player2 (handled above)
+              let isPlayer1 = switch (room.player1) {
+                case (?slot) { slot.principal == player };
+                case (null) { false };
+              };
+              let isPlayer2 = switch (room.player2) {
+                case (?slot) { slot.principal == player };
+                case (null) { false };
+              };
+              if (not isPlayer1 and not isPlayer2) {
+                // Remove invitation for this player
+                let invites = Map.get(invitationsByUser, phash, player);
+                switch (invites) {
+                  case (?inviteList) {
+                    let filtered = Buffer.Buffer<Lobby.RoomId>(0);
+                    for (invite in inviteList.vals()) {
+                      if (invite != roomId) {
+                        filtered.add(invite);
+                      };
+                    };
+                    let updated = Buffer.toArray(filtered);
+                    if (updated.size() > 0) {
+                      Map.set(invitationsByUser, phash, player, updated);
+                    } else {
+                      Map.delete(invitationsByUser, phash, player);
+                    };
+                  };
+                  case (null) {};
+                };
+              };
+            };
+          };
+          case (null) {};
+        };
+
+        return #ok(());
+      };
+    };
+  };
+
   // Archive finished rooms (moves from activeRooms to archivedRooms)
   // TODO: Call this function from recurring timer
   private func archiveFinishedRooms() : () {
