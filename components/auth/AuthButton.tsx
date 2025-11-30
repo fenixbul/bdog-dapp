@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { LogIn, LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuthStore } from '@/store/auth-store';
@@ -9,12 +9,6 @@ import { ConnectWalletModal } from './ConnectWalletModal';
 export function AuthButton() {
   const [modalOpen, setModalOpen] = useState(false);
   const { isInitialized, isAuthenticated, signOut } = useAuthStore();
-
-  useEffect(() => {
-    if(isAuthenticated) {
-      setModalOpen(false);
-    }
-  }, [isAuthenticated]);
 
   if (!isInitialized) return null;
 

@@ -1,5 +1,8 @@
 import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
+import BigNumber from "bignumber.js"
+
+export type Null = null | undefined;
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
@@ -157,4 +160,66 @@ export function formatPercentage(
   }
   
   return showSymbol ? `${formatted}%` : formatted;
+}
+
+/**
+ * Check if value is undefined or null
+ */
+function isUndefinedOrNull(value: any): boolean {
+  return value === null || value === undefined;
+}
+
+/**
+ * Remove trailing zeros after decimal point
+ */
+function removeUselessZeroes(str: string): string {
+  if (!str.includes('.')) return str;
+  return str.replace(/\.?0+$/, '');
+}
+
+/**
+ * Format amount options
+ */
+export interface FormatAmountOptions {
+  digits?: number;
+  min?: number;
+  max?: number;
+  fullNumber?: boolean;
+  fullDigits?: number;
+}
+
+/**
+ * Format amount with smart formatting
+ * - Handles null/undefined values
+ * - Shows compact notation for large numbers
+ * - Removes trailing zeros
+ * - Handles very small numbers with threshold
+ */
+export function formatAmount(
+  num: number | string | Null,
+  options?: FormatAmountOptions
+): string {
+  const { digits = 5, min = 0.00001, max = 1000, fullNumber, fullDigits = 5 } = options ?? {};
+
+  if (isUndefinedOrNull(num)) return "-";
+  if (new BigNumber(num).isEqualTo(0)) return "0.00";
+
+  if (fullNumber) {
+    return new BigNumber(num).toFormat(fullDigits);
+  }
+
+  if (new BigNumber(num).isLessThan(min)) {
+    return `<${min}`;
+  }
+
+  if (new BigNumber(num).isLessThan(max)) {
+    return removeUselessZeroes(new BigNumber(num).toFixed(digits));
+  }
+
+  return Intl.NumberFormat("en-US", {
+    notation: "compact",
+    compactDisplay: "short",
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(Number(num));
 }

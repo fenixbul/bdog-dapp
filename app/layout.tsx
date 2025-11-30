@@ -6,6 +6,7 @@ import { Footer, Header } from "../components/layout";
 import { Toaster } from "@/components/ui";
 import { TooltipProvider } from "@/components/ui";
 import { AuthProvider } from "@/components/auth/AuthProvider";
+import { TokenDataProvider } from "@/contexts/TokenDataProvider";
 
 const inter = Inter({
   subsets: ['latin'],
@@ -82,10 +83,9 @@ export default function RootLayout({
       <body className="bg-background">
         <TooltipProvider>
           <AuthProvider>
-            {/* <Header /> */}
-            {children}
-            {/* <Footer /> */}
-            {/* <Toaster /> */}
+            <TokenDataProvider>
+              {children}
+            </TokenDataProvider>
           </AuthProvider>
         </TooltipProvider>
       </body>

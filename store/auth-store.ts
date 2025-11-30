@@ -3,12 +3,15 @@ import { devtools } from 'zustand/middleware';
 import type { Identity } from "@dfinity/agent";
 import type { AuthClient } from "@dfinity/auth-client";
 import { createAuthClient, getIdentityProviderUrl, initAuth } from '@/lib/auth/auth-utils';
+import { principalToAccountIdentifier } from '@/lib/wallet/accountIdentifier';
 
 export interface AuthStoreData {
   identity: Identity | undefined | null;
   isInitialized: boolean;
   isAuthenticated: boolean;
   principal: string | null;
+  principalId: string | null;
+  accountId: string | null;
   authClient: AuthClient | null;
 }
 
@@ -29,6 +32,8 @@ export const useAuthStore = create<AuthStore>()(
       isInitialized: false,
       isAuthenticated: false,
       principal: null,
+      principalId: null,
+      accountId: null,
       authClient: null,
       
       // Actions
@@ -38,11 +43,22 @@ export const useAuthStore = create<AuthStore>()(
           const identity = isAuthenticated ? authClient.getIdentity() : null;
           const principal = identity ? identity.getPrincipal().toText() : null;
           
+          // Calculate principalId and accountId if authenticated
+          let principalId = null;
+          let accountId = null;
+          if (identity) {
+            const principalObj = identity.getPrincipal();
+            principalId = principalObj.toString();
+            accountId = principalToAccountIdentifier(principalObj);
+          }
+          
           set({
             authClient,
             identity,
             isAuthenticated,
             principal,
+            principalId,
+            accountId,
             isInitialized: true,
           });
         } catch (error) {
@@ -51,6 +67,8 @@ export const useAuthStore = create<AuthStore>()(
             identity: null,
             isAuthenticated: false,
             principal: null,
+            principalId: null,
+            accountId: null,
             isInitialized: true,
           });
         }
@@ -73,11 +91,22 @@ export const useAuthStore = create<AuthStore>()(
               const identity = client.getIdentity();
               const principal = identity ? identity.getPrincipal().toText() : null;
               
+              // Calculate principalId and accountId
+              let principalId = null;
+              let accountId = null;
+              if (identity) {
+                const principalObj = identity.getPrincipal();
+                principalId = principalObj.toString();
+                accountId = principalToAccountIdentifier(principalObj);
+              }
+              
               set({
                 authClient: client,
                 identity,
                 isAuthenticated: true,
                 principal,
+                principalId,
+                accountId,
               });
             },
             onError,
@@ -99,6 +128,8 @@ export const useAuthStore = create<AuthStore>()(
           identity: null,
           isAuthenticated: false,
           principal: null,
+          principalId: null,
+          accountId: null,
           authClient: null,
         });
       },

@@ -1,51 +1,30 @@
 "use client";
 import React, { useState, useEffect } from 'react';
-import { icexplorerService, type IcexplorerTokenData } from '@/lib/icexplorer-service';
+import { useTokenData } from '@/contexts/TokenDataProvider';
 import { TrendingUp, TrendingDown, Users, BarChart3, Activity, Coins, FileText, Copy, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
-
-const BDOG_LEDGER_ID = "2qqix-tiaaa-aaaam-qeria-cai";
+import { BDOG_CANISTER_ID } from '@/lib/wallet/constants';
 
 export const BdogStats: React.FC = () => {
-  const [data, setData] = useState<IcexplorerTokenData | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const { getTokenData, loading: contextLoading, error: contextError } = useTokenData();
+  const [localLoading, setLocalLoading] = useState(true);
+  const [localError, setLocalError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
 
+  const data = getTokenData(BDOG_CANISTER_ID);
+  const loading = contextLoading || localLoading;
+  const error = contextError || localError;
+
   useEffect(() => {
-    fetchBdogData();
-    
-    // Start auto-refresh service
-    icexplorerService.startAutoRefresh(BDOG_LEDGER_ID);
-    
-    // Subscribe to updates
-    const unsubscribe = icexplorerService.subscribe(BDOG_LEDGER_ID, (newData: IcexplorerTokenData) => {
-      setData(newData);
-      setError(null);
-      setLoading(false);
-    });
-
-    return () => {
-      unsubscribe();
-      icexplorerService.stopAutoRefresh(BDOG_LEDGER_ID);
-    };
-  }, []);
-
-  const fetchBdogData = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      
-      const tokenData = await icexplorerService.getData(BDOG_LEDGER_ID);
-      setData(tokenData);
-    } catch (err) {
-      console.error('Failed to fetch BDOG data:', err);
-      setError('Failed to load BDOG data');
-    } finally {
-      setLoading(false);
+    if (data) {
+      setLocalLoading(false);
+      setLocalError(null);
+    } else if (contextError) {
+      setLocalLoading(false);
+      setLocalError(contextError);
     }
-  };
+  }, [data, contextError]);
 
   const formatNumber = (num: number): string => {
     if (num >= 1000000) {
@@ -73,7 +52,7 @@ export const BdogStats: React.FC = () => {
 
   const handleCopyAddress = async () => {
     try {
-      await navigator.clipboard.writeText(BDOG_LEDGER_ID);
+      await navigator.clipboard.writeText(BDOG_CANISTER_ID);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch (err) {
@@ -96,7 +75,11 @@ export const BdogStats: React.FC = () => {
       <div className="h-full flex flex-col items-center justify-center text-red-400">
         <p className="mb-2">{error}</p>
         <button 
-          onClick={fetchBdogData}
+          onClick={() => {
+            setLocalLoading(true);
+            setLocalError(null);
+            // Data will be refreshed automatically by TokenDataProvider
+          }}
           className="px-4 py-2 bg-[hsl(158,100%,50%)] text-black rounded-lg text-sm hover:bg-[hsl(158,100%,45%)] transition-colors"
         >
           Retry
@@ -165,7 +148,7 @@ export const BdogStats: React.FC = () => {
         </div>
         <div className="flex items-center gap-2">
           <span className="text-sm font-mono text-white flex-1 break-all">
-            {BDOG_LEDGER_ID}
+            {BDOG_CANISTER_ID}
           </span>
           <Tooltip>
             <TooltipTrigger asChild>

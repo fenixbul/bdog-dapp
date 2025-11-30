@@ -2,6 +2,8 @@
 
 import { getBobminingActor, getBobledgerActor } from './actors';
 import type { Stats } from './canisters/bobmining.did.d.ts';
+import { tokenDataService } from './token-data-service';
+import { BOB_CANISTER_ID } from './wallet/constants';
 
 // API Response Interfaces
 interface CycleBurnRateResponse {
@@ -12,17 +14,6 @@ interface XtcPriceResponse {
   success: boolean;
   rates: {
     USD: number;
-  };
-}
-
-interface BobPriceResponse {
-  coins: {
-    "coingecko:bob-3": {
-      price: number;
-      symbol: string;
-      timestamp: number;
-      confidence: number;
-    };
   };
 }
 
@@ -65,7 +56,6 @@ class BobMiningService {
   private readonly BOB_SUBNET_URL = 'https://ic-api.internetcomputer.org/api/v3/metrics/cycle-burn-rate?subnet=bkfrj-6k62g-dycql-7h53p-atvkj-zg4to-gaogh-netha-ptybj-ntsgw-rqe';
   private readonly NETWORK_BURN_URL = 'https://ic-api.internetcomputer.org/api/v3/metrics/cycle-burn-rate';
   private readonly XTC_PRICE_URL = 'https://api.fxratesapi.com/latest?base=XDR&currencies=USD';
-  private readonly BOB_PRICE_URL = 'https://coins.llama.fi/prices/current/coingecko:bob-3';
 
   /**
    * Fetch BOB subnet cycle burn rate
@@ -122,17 +112,15 @@ class BobMiningService {
   }
 
   /**
-   * Fetch BOB token price
+   * Fetch BOB token price from TokenDataService
    */
   private async fetchBobPrice(): Promise<number> {
     try {
-      const response = await fetch(this.BOB_PRICE_URL);
-      const data: BobPriceResponse = await response.json();
-      
-      if (data.coins && data.coins["coingecko:bob-3"]) {
-        return data.coins["coingecko:bob-3"].price;
+      const price = await tokenDataService.getTokenPrice(BOB_CANISTER_ID);
+      if (price === null || price === undefined) {
+        throw new Error('BOB price not available from TokenDataService');
       }
-      throw new Error('BOB price not available');
+      return price;
     } catch (error) {
       console.error('Failed to fetch BOB price:', error);
       throw error;

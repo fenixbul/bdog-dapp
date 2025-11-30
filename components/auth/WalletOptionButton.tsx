@@ -16,7 +16,11 @@ export function WalletOptionButton({ icon, label, identityProviderUrl, onClick }
 
   const handleClick = () => {
     if (onClick) onClick();
-    signIn(identityProviderUrl);
+    signIn(identityProviderUrl, (error) => {
+      if (error) {
+        console.error('Sign in error:', error);
+      }
+    });
   };
 
   return (
