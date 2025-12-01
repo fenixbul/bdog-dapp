@@ -4,9 +4,7 @@ import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
 import { Footer, Header } from "../components/layout";
 import { Toaster } from "@/components/ui";
-import { TooltipProvider } from "@/components/ui";
-import { AuthProvider } from "@/components/auth/AuthProvider";
-import { TokenDataProvider } from "@/contexts/TokenDataProvider";
+import { GeneralProviders } from "@/components/GeneralProviders";
 import { Sidebar, BottomTab } from "@/components/layout/nav";
 
 const inter = Inter({
@@ -86,13 +84,9 @@ export default function RootLayout({
         <div className="hidden lg:block">
           <Sidebar />
         </div>
-        <TooltipProvider>
-          <AuthProvider>
-            <TokenDataProvider>
-              {children}
-            </TokenDataProvider>
-          </AuthProvider>
-        </TooltipProvider>
+        <GeneralProviders>
+          {children}
+        </GeneralProviders>
         {/* Mobile: Bottom Tab Navigation */}
         <div className="lg:hidden">
           <BottomTab />

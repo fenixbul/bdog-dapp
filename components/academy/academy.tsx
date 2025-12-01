@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { motion } from 'framer-motion';
 import { Coins, Scale, Pickaxe, CheckCircle, Flame, Shield, TrendingUp } from 'lucide-react';
 import { LessonCard } from './LessonCard';
 import { LessonModal } from './LessonModal';
@@ -109,15 +110,43 @@ export function Academy() {
               <p className="text-muted-foreground">No lessons available</p>
             </div>
           ) : (
-            <div className="space-y-3">
+            <motion.div
+              className="space-y-3"
+              initial="hidden"
+              animate="visible"
+              variants={{
+                hidden: { opacity: 0 },
+                visible: {
+                  opacity: 1,
+                  transition: {
+                    staggerChildren: 0.05,
+                    delayChildren: 0.1,
+                  },
+                },
+              }}
+            >
               {lessons.map((lesson) => (
-                <LessonCard
+                <motion.div
                   key={lesson.id}
-                  lesson={lesson}
-                  onClick={() => handleLessonClick(lesson)}
-                />
+                  variants={{
+                    hidden: { opacity: 0, y: 20 },
+                    visible: {
+                      opacity: 1,
+                      y: 0,
+                      transition: {
+                        duration: 0.4,
+                        ease: [0.25, 0.1, 0.25, 1],
+                      },
+                    },
+                  }}
+                >
+                  <LessonCard
+                    lesson={lesson}
+                    onClick={() => handleLessonClick(lesson)}
+                  />
+                </motion.div>
               ))}
-            </div>
+            </motion.div>
           )}
         </div>
 

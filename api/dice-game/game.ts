@@ -20,3 +20,4 @@ export async function resign(gameCanisterId: string) {
   // TODO: Resign from game
 }
 
+

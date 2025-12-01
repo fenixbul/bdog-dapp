@@ -1,0 +1,52 @@
+[
+  {
+    "match": ".well-known",
+    "ignore": false
+  },
+  {
+    "match": "**/*.png",
+    "headers": {
+      "Cache-Control": "public, max-age=31536000"
+    }
+  },
+  {
+    "match": "**/*.jpg",
+    "headers": {
+      "Cache-Control": "public, max-age=31536000"
+    }
+  },
+  {
+    "match": "**/*.jpeg",
+    "headers": {
+      "Cache-Control": "public, max-age=31536000"
+    }
+  },
+  {
+    "match": "**/*.mp4",
+    "headers": {
+      "Cache-Control": "public, max-age=31536000"
+    }
+  },
+  {
+    "match": "**/*.gif",
+    "headers": {
+      "Cache-Control": "public, max-age=31536000"
+    }
+  },
+  {
+    "match": "**/*.svg",
+    "headers": {
+      "Cache-Control": "public, max-age=31536000"
+    }
+  },
+  {
+    "match": "**/*",
+    "headers": {
+      "X-Frame-Options": "DENY",
+      "X-Content-Type-Options": "nosniff",
+      "Strict-Transport-Security": "max-age=31536000; includeSubDomains",
+      "Referrer-Policy": "same-origin",
+      "X-XSS-Protection": "1; mode=block"
+    }
+  }
+]
