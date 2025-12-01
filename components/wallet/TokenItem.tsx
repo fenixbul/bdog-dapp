@@ -15,7 +15,7 @@ export function TokenItem({ token, onClick }: TokenItemProps) {
   return (
     <div
       onClick={onClick}
-      className="flex items-center justify-between p-4 rounded-xl border border-border mb-3 bg-card active:bg-accent transition-colors cursor-pointer"
+      className="flex items-center justify-between p-4 border border-border mb-3 bg-card active:bg-accent transition-colors cursor-pointer"
     >
       <div className="flex items-center gap-3 flex-1">
         {/* Token Icon */}

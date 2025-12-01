@@ -7,6 +7,7 @@ import { Toaster } from "@/components/ui";
 import { TooltipProvider } from "@/components/ui";
 import { AuthProvider } from "@/components/auth/AuthProvider";
 import { TokenDataProvider } from "@/contexts/TokenDataProvider";
+import { Sidebar, BottomTab } from "@/components/layout/nav";
 
 const inter = Inter({
   subsets: ['latin'],
@@ -81,6 +82,10 @@ export default function RootLayout({
         />
       </head>
       <body className="bg-background">
+        {/* Desktop: Sidebar Navigation */}
+        <div className="hidden lg:block">
+          <Sidebar />
+        </div>
         <TooltipProvider>
           <AuthProvider>
             <TokenDataProvider>
@@ -88,6 +93,10 @@ export default function RootLayout({
             </TokenDataProvider>
           </AuthProvider>
         </TooltipProvider>
+        {/* Mobile: Bottom Tab Navigation */}
+        <div className="lg:hidden">
+          <BottomTab />
+        </div>
       </body>
     </html>
   );

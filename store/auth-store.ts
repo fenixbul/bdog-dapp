@@ -86,7 +86,7 @@ export const useAuthStore = create<AuthStore>()(
           
           await client.login({
             identityProvider: providerUrl,
-            maxTimeToLive: BigInt(30 * 60 * 1_000_000_000), // 30 mins
+            maxTimeToLive: BigInt(7 * 24 * 60 * 60 * 1_000_000_000), // 1 week
             onSuccess: () => {
               const identity = client.getIdentity();
               const principal = identity ? identity.getPrincipal().toText() : null;
