@@ -39,9 +39,9 @@ export function Wallet() {
   };
 
   return (
-    <div className="min-h-screen flex justify-center bg-background">
+    <div className="flex justify-center bg-background">
       {/* App Container */}
-      <div className="w-full max-w-md min-h-screen relative overflow-hidden shadow-xl bg-card">
+      <div className="w-full max-w-md relative overflow-hidden shadow-xl bg-card">
         {/* Sticky Header */}
         <header className="sticky top-0 z-10 backdrop-blur-md border-b border-border bg-card/80">
           <div className="h-14 flex items-center justify-center">

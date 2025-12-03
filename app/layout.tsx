@@ -5,7 +5,8 @@ import { Inter } from 'next/font/google'
 import { Footer, Header } from "../components/layout";
 import { Toaster } from "@/components/ui";
 import { GeneralProviders } from "@/providers/GeneralProviders";
-import { Sidebar, BottomTab } from "@/components/layout/nav";
+import { Sidebar } from "@/components/layout/nav";
+import { ConditionalBottomTab } from "@/components/layout/nav/ConditionalBottomTab";
 
 const inter = Inter({
   subsets: ['latin'],
@@ -89,7 +90,7 @@ export default function RootLayout({
         </GeneralProviders>
         {/* Mobile: Bottom Tab Navigation */}
         <div className="lg:hidden">
-          <BottomTab />
+          <ConditionalBottomTab />
         </div>
       </body>
     </html>

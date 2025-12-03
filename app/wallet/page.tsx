@@ -3,6 +3,7 @@
 import { Wallet } from '@/components/wallet/wallet';
 import { useAuthStore } from '@/store/auth-store';
 import { AccessRequired } from '@/components/auth/AccessRequired';
+import { AccountNavigation } from '@/components/layout/nav';
 
 export default function WalletPage() {
   const { isInitialized, isAuthenticated } = useAuthStore();
@@ -15,13 +16,21 @@ export default function WalletPage() {
   // Show access required message if not authenticated
   if (!isAuthenticated) {
     return (
-      <AccessRequired
-        message="Please connect your wallet to access the wallet page."
-      />
+      <>
+        <AccessRequired
+          message="Please connect your wallet to access the wallet page."
+        />
+        <AccountNavigation />
+      </>
     );
   }
 
   // Render wallet component when authenticated
-  return <Wallet />;
+  return (
+    <>
+      <Wallet />
+      <AccountNavigation />
+    </>
+  );
 }
 
