@@ -144,6 +144,24 @@ for canister in "${MOTOKO_CANISTERS[@]}"; do
     fi
 done
 
+# Deploy ICRC Token Ledgers (Local Development Only)
+print_status "Deploying ICRC token ledgers for local development..."
+if ./scripts/deploy_icrc_tokens.sh; then
+    print_status "All ICRC tokens deployed successfully"
+else
+    print_error "Failed to deploy ICRC tokens"
+    exit 1
+fi
+
+# Deploy Internet Identity
+print_status "Deploying internet_identity canister..."
+if dfx deploy internet_identity; then
+    print_status "internet_identity deployed successfully"
+else
+    print_error "Failed to deploy internet_identity"
+    exit 1
+fi
+
 # Set up authorization relationships
 print_status "Setting up authorization relationships..."
 if [ -f "./setup-authorizations.sh" ]; then
@@ -200,6 +218,20 @@ for canister in "${MOTOKO_CANISTERS[@]}"; do
     echo "   $canister: $CANISTER_ID"
     echo "      Candid UI: http://localhost:8080/?canisterId=$CANISTER_ID"
 done
+II_ID=$(dfx canister id internet_identity 2>/dev/null || echo "not found")
+echo "   internet_identity: $II_ID"
+echo "      URL: http://${II_ID}.localhost:4943"
+echo ""
+echo "🪙 Token Ledgers (Local Development):"
+ICP_CANISTER_ID="ryjl3-tyaaa-aaaaa-aaaba-cai"
+BOB_CANISTER_ID="7pail-xaaaa-aaaas-aabmq-cai"
+BDOG_CANISTER_ID="2qqix-tiaaa-aaaam-qeria-cai"
+echo "   ICP: $ICP_CANISTER_ID"
+echo "      Candid UI: http://localhost:8080/?canisterId=$ICP_CANISTER_ID"
+echo "   BOB: $BOB_CANISTER_ID"
+echo "      Candid UI: http://localhost:8080/?canisterId=$BOB_CANISTER_ID"
+echo "   BDOG: $BDOG_CANISTER_ID"
+echo "      Candid UI: http://localhost:8080/?canisterId=$BDOG_CANISTER_ID"
 
 echo ""
 echo "🔐 Authorization relationships:"

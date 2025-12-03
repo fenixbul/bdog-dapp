@@ -24,9 +24,9 @@ export function useWalletTokens() {
   const tokenService = useMemo(() => {
     if (!identity) return null;
     
-    const host = process.env.DFX_NETWORK === 'ic' || true // Always use icp0.io for now
+    const host = process.env.DFX_NETWORK === 'ic' // Always use icp0.io for now
       ? 'https://icp0.io' 
-      : 'http://localhost:4943';
+      : 'http://localhost:8080';
     
     const agent = new HttpAgent({ 
       identity,

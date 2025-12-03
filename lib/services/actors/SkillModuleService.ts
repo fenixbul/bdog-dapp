@@ -29,7 +29,8 @@ export class SkillModuleService extends ActorBaseService<SkillModuleServiceType>
    */
   async getModule(moduleId: ModuleId): Promise<Module | null> {
     try {
-      const result = await this.actor.get_module(moduleId);
+      const actor = await this.getActor();
+      const result = await actor.get_module(moduleId);
       return result.length > 0 ? result[0] : null;
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);
@@ -45,7 +46,10 @@ export class SkillModuleService extends ActorBaseService<SkillModuleServiceType>
    */
   async createModule(moduleInput: ModuleInput): Promise<Module> {
     return this.callCanister(
-      () => this.actor.create_module(moduleInput),
+      async () => {
+        const actor = await this.getActor();
+        return actor.create_module(moduleInput);
+      },
       "create module"
     );
   }
@@ -58,7 +62,10 @@ export class SkillModuleService extends ActorBaseService<SkillModuleServiceType>
    */
   async startQuiz(moduleId: ModuleId, quizId: QuizId): Promise<Quiz> {
     return this.callCanister(
-      () => this.actor.start_quiz(moduleId, quizId),
+      async () => {
+        const actor = await this.getActor();
+        return actor.start_quiz(moduleId, quizId);
+      },
       "start quiz"
     );
   }
@@ -76,7 +83,10 @@ export class SkillModuleService extends ActorBaseService<SkillModuleServiceType>
     answers: Array<AnswerSubmission>
   ): Promise<QuizFeedback> {
     return this.callCanister(
-      () => this.actor.answer_quiz(moduleId, quizId, answers),
+      async () => {
+        const actor = await this.getActor();
+        return actor.answer_quiz(moduleId, quizId, answers);
+      },
       "answer quiz"
     );
   }
@@ -92,7 +102,8 @@ export class SkillModuleService extends ActorBaseService<SkillModuleServiceType>
     quizId: QuizId
   ): Promise<QuizAttempt | null> {
     try {
-      const result = await this.actor.get_quiz_attempt(moduleId, quizId);
+      const actor = await this.getActor();
+      const result = await actor.get_quiz_attempt(moduleId, quizId);
       return result.length > 0 ? result[0] : null;
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);
@@ -110,7 +121,8 @@ export class SkillModuleService extends ActorBaseService<SkillModuleServiceType>
    */
   async getQuizConfig(): Promise<QuizConfig> {
     try {
-      return await this.actor.get_quiz_config();
+      const actor = await this.getActor();
+      return await actor.get_quiz_config();
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);
       console.error("Error getting quiz config:", errorMessage);
@@ -124,7 +136,10 @@ export class SkillModuleService extends ActorBaseService<SkillModuleServiceType>
    */
   async updateQuizConfig(config: QuizConfig): Promise<void> {
     await this.callCanister(
-      () => this.actor.update_quiz_config(config),
+      async () => {
+        const actor = await this.getActor();
+        return actor.update_quiz_config(config);
+      },
       "update quiz config"
     );
   }
@@ -135,7 +150,10 @@ export class SkillModuleService extends ActorBaseService<SkillModuleServiceType>
    */
   async getAuthorizedPrincipals(): Promise<Array<Principal>> {
     return this.callCanister(
-      () => this.actor.getAuthorizedPrincipals(),
+      async () => {
+        const actor = await this.getActor();
+        return actor.getAuthorizedPrincipals();
+      },
       "get authorized principals"
     );
   }
@@ -146,7 +164,10 @@ export class SkillModuleService extends ActorBaseService<SkillModuleServiceType>
    */
   async addAuthorizedPrincipal(principal: Principal): Promise<void> {
     await this.callCanister(
-      () => this.actor.addAuthorizedPrincipal(principal),
+      async () => {
+        const actor = await this.getActor();
+        return actor.addAuthorizedPrincipal(principal);
+      },
       "add authorized principal"
     );
   }
@@ -157,7 +178,10 @@ export class SkillModuleService extends ActorBaseService<SkillModuleServiceType>
    */
   async removeAuthorizedPrincipal(principal: Principal): Promise<void> {
     await this.callCanister(
-      () => this.actor.removeAuthorizedPrincipal(principal),
+      async () => {
+        const actor = await this.getActor();
+        return actor.removeAuthorizedPrincipal(principal);
+      },
       "remove authorized principal"
     );
   }

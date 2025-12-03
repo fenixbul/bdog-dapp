@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 import {
   Dialog,
@@ -6,33 +6,40 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog';
-import { WalletOptionButton } from './WalletOptionButton';
+} from "@/components/ui/dialog";
+import { WalletOptionButton } from "./WalletOptionButton";
 
 interface ConnectWalletModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
 
-export function ConnectWalletModal({ open, onOpenChange }: ConnectWalletModalProps) {
+export function ConnectWalletModal({
+  open,
+  onOpenChange,
+}: ConnectWalletModalProps) {
+  const internetIdentityUrl =
+    process.env.DFX_NETWORK === "ic"
+      ? "https://identity.ic0.app/"
+      : `http://${process.env.NEXT_PUBLIC_INTERNET_IDENTITY_CANISTER_ID}.localhost:8080/#authorize`;
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Connect Wallet</DialogTitle>
-          
         </DialogHeader>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
           <WalletOptionButton
-            icon="/images/II_v1.svg"
+            icon={{ src: "/images/II_v1.svg" }}
             label="Internet Identity"
-            description="Standard ICP login with unique principal per dapp"
-            identityProviderUrl="https://identity.ic0.app/"
+            description="Standard ICP dapp login."
+            identityProviderUrl={internetIdentityUrl}
           />
           <WalletOptionButton
-            icon="/images/II_v2.svg"
-            label="Internet Identity 2.0"
-            description="Sign in with Google, Apple, or Microsoft"
+            icon={{ src: "/images/web2-auth.jpg", width: 120, height: 48 }}
+            label="Login with..."
+            description="Google, Apple, or Microsoft."
             identityProviderUrl="https://id.ai"
           />
         </div>
@@ -40,4 +47,3 @@ export function ConnectWalletModal({ open, onOpenChange }: ConnectWalletModalPro
     </Dialog>
   );
 }
-

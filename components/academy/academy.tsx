@@ -1,13 +1,15 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Coins, Scale, Pickaxe, CheckCircle, Flame, Shield, TrendingUp } from 'lucide-react';
 import { LessonCard } from './LessonCard';
 import { LessonModal } from './LessonModal';
 import { AcademyHero } from './AcademyHero';
 import { Quiz } from './Quiz';
 import { useAcademyProgress } from '@/hooks/use-academy-progress';
+import { useActorServices } from '@/providers/ActorServiceProvider';
+import { LoadingOverlay } from '@/components/layout/LoadingOverlay';
+import type { Module } from '@/lib/canisters/skill_module/skill_module.did';
 import Image from 'next/image';
 
 export type Lesson = {
@@ -18,63 +20,13 @@ export type Lesson = {
   icon?: React.ReactNode;
 };
 
-// Initial lesson data
-const lessons: Lesson[] = [
-  {
-    id: 'what-is-bob',
-    title: 'What is BOB?',
-    subtitle: 'The first token to make ICP burn for real.',
-    content: 'BOB is the first-ever proof-of-work token built on the Internet Computer, created entirely through burning ICP for computation. It represents a fully transparent, community-driven asset with zero premine, no insider allocation, and no privileged access.',
-    icon: <Image src="/images/bob_logo.png" alt="BOB" width={36} height={36} />,
-  },
-  {
-    id: 'fair-launch',
-    title: 'Fair Launch Proof',
-    subtitle: 'No early insiders. No secret deals. Just pure mining.',
-    content: 'Every BOB in existence had to be mined by burning ICP—no team wallets, no VC rounds, no airdrops, no backdoor allocations. This places BOB among the fairest and most decentralized token launches in the entire crypto industry.',
-    icon: <Scale className="h-6 w-6" />,
-  },
-  {
-    id: 'mining-work',
-    title: 'On-Chain Mining',
-    subtitle: 'Mining powered by ICP burn… not electricity.',
-    content: 'Miners spent ICP to buy computation (cycles) and used that on-chain power to mint BOB through real proof-of-work. The entire process was open, verifiable, and identical for every participant, giving BOB unmatched transparency.',
-    icon: <Pickaxe className="h-6 w-6" />,
-  },
-  {
-    id: 'end-of-mining',
-    title: 'Fixed Supply Forever',
-    subtitle: 'The door to new supply is permanently closed.',
-    content: 'The mining phase is fully completed, meaning BOB now has a fixed and fully distributed supply. This eliminates emission pressure forever and makes BOB one of the rare static-supply assets on the ICP network.',
-    icon: <CheckCircle className="h-6 w-6" />,
-  },
-  {
-    id: 'deflationary',
-    title: 'ICP Burn Engine',
-    subtitle: 'BOB burned millions in ICP to come alive.',
-    content: 'Every BOB minted required ICP to be burned, reducing the ICP supply and helping the network reach periods of net deflation. BOB is one of the few community tokens that materially strengthened the economic health of the Internet Computer.',
-    icon: <Flame className="h-6 w-6" />,
-  },
-  {
-    id: 'governance',
-    title: 'NNS Secured Token',
-    subtitle: 'Unruggable by design, secured by the NNS.',
-    content: 'Control of BOB has been transferred to the Internet Computer\'s NNS governance system, removing single-developer risk entirely. This makes BOB immune to rug pulls, misuse, or unilateral changes—an institutional-grade safety feature.',
-    icon: <Shield className="h-6 w-6" />,
-  },
-  {
-    id: 'long-term',
-    title: 'Long-Term Upside',
-    subtitle: 'Scarcity, strong holders, and a growing narrative.',
-    content: 'With fixed supply, fair distribution, strong long-term holders, and NNS-backed security, BOB sits as a rare and high-conviction asset in a still-early ecosystem. If ICP enters a major growth phase, BOB\'s unique origin and deflationary impact create asymmetric upside potential.',
-    icon: <TrendingUp className="h-6 w-6" />,
-  },
-];
-
 export function Academy() {
   const [selectedLesson, setSelectedLesson] = useState<Lesson | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isQuizOpen, setIsQuizOpen] = useState(false);
+  const [isLoadingModule, setIsLoadingModule] = useState(true);
+  const [lessons, setLessons] = useState<Lesson[]>([]);
+  const { skillModuleService } = useActorServices();
   const { 
     markLessonViewed, 
     isLessonViewed, 
@@ -82,6 +34,58 @@ export function Academy() {
     canAccessQuiz,
     markQuizAttempt 
   } = useAcademyProgress();
+
+  // Fetch module id=1 on component mount
+  useEffect(() => {
+    const fetchModule = async () => {
+      setIsLoadingModule(true);
+      try {
+        // TODO: Add error handling
+        const fetchedModule = await skillModuleService.getModule(1n);
+        
+        if (fetchedModule) {
+          // Map Module lessons to component Lesson format
+          const mappedLessons = fetchedModule.lessons
+            .sort((a, b) => Number(a.order - b.order))
+            .map((lesson) => {
+              try {
+                // Parse JSON data from lesson.data
+                const lessonData = JSON.parse(lesson.data);
+                return {
+                  id: lesson.id.toString(),
+                  title: lessonData.title || '',
+                  subtitle: lessonData.subtitle || '',
+                  content: lessonData.content || '',
+                  icon: lessonData.icon ? (
+                    lessonData.icon.startsWith('/') ? (
+                      <Image src={lessonData.icon} alt={lessonData.title || ''} width={36} height={36} />
+                    ) : null
+                  ) : undefined,
+                };
+              } catch (error) {
+                // TODO: Add error handling for JSON parsing
+                console.error('Error parsing lesson data:', error);
+                return {
+                  id: lesson.id.toString(),
+                  title: 'Untitled Lesson',
+                  subtitle: '',
+                  content: '',
+                };
+              }
+            });
+          setLessons(mappedLessons);
+        }
+      } catch (error) {
+        // TODO: Add error handling
+        console.error('Error fetching module:', error);
+      } finally {
+        setIsLoadingModule(false);
+      }
+    };
+
+    fetchModule();
+  }, [skillModuleService]);
+
   const progress = getProgress(lessons.length);
   const quizAccessible = canAccessQuiz(lessons.length);
 
@@ -133,6 +137,9 @@ export function Academy() {
 
   return (
     <div className="min-h-screen flex justify-center bg-background">
+      {/* Show loading overlay while fetching module */}
+      {isLoadingModule && <LoadingOverlay />}
+      
       {/* App Container */}
       <div className="w-full max-w-md min-h-screen relative overflow-hidden shadow-xl bg-card">
         {/* Sticky Header */}

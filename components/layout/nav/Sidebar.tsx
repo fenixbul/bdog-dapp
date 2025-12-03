@@ -3,8 +3,9 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Menu, X, ChevronLeft } from 'lucide-react';
+import { Menu, X, ChevronLeft, LogOut } from 'lucide-react';
 import { navItems, type NavItem } from './nav-items';
+import { useAuthStore } from '@/store/auth-store';
 
 /**
  * Collapsible Left Sidebar
@@ -34,6 +35,7 @@ export function Sidebar({ className = '', activePath }: SidebarProps) {
   const pathname = usePathname();
   const [isCollapsed, setIsCollapsed] = useState(true);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
+  const { isAuthenticated, signOut } = useAuthStore();
 
   const currentPath = activePath || pathname;
 
@@ -144,6 +146,35 @@ export function Sidebar({ className = '', activePath }: SidebarProps) {
               </Link>
             );
           })}
+          
+          {/* Logout Button */}
+          {isAuthenticated && (
+            <button
+              onClick={() => {
+                setIsMobileOpen(false);
+                signOut();
+              }}
+              className={`
+                flex items-center gap-3 px-3 py-2.5 rounded-md
+                transition-all duration-200
+                group relative
+                text-foreground hover:bg-accent hover:text-accent-foreground
+                ${isCollapsed ? 'justify-center' : ''}
+              `}
+              title={isCollapsed ? 'Logout' : undefined}
+            >
+              <LogOut className="w-5 h-5 flex-shrink-0" />
+              {!isCollapsed && (
+                <span className="font-medium">Logout</span>
+              )}
+              {/* Tooltip for collapsed state */}
+              {isCollapsed && (
+                <div className="absolute capitalize font-normal left-full ml-2 px-2 py-1 bg-popover text-popover-foreground text-sm rounded-md opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity whitespace-nowrap border border-border z-50">
+                  Logout
+                </div>
+              )}
+            </button>
+          )}
         </nav>
       </aside>
 

@@ -63,7 +63,7 @@ export function ActorServiceProvider({ children }: ActorServiceProviderProps) {
       // Collect all actors from all services
       const allActors: Array<{ name: string; actor: any }> = [];
       for (const service of serviceInstances) {
-        const actors = service.getAllActors();
+        const actors = await service.getAllActors();
         allActors.push(...actors);
       }
 

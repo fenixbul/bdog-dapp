@@ -170,9 +170,9 @@ export function ActionModal({
         const agent = new HttpAgent({
           identity,
           host:
-            process.env.DFX_NETWORK === "ic" || true // Always use icp0.io for now
+            process.env.DFX_NETWORK === "ic"
               ? "https://icp0.io"
-              : "http://localhost:4943",
+              : "http://localhost:8080",
         });
         const icpCanisterId = Principal.fromText(ICP_CANISTER_ID);
         const ledgerCanister = await icpLedgerStore.getCanister(

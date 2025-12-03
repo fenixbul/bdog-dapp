@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import { motion } from 'framer-motion';
-import { GraduationCap } from 'lucide-react';
+import { motion } from "framer-motion";
+import { GraduationCap } from "lucide-react";
 
 interface AcademyHeroProps {
   progress: number;
@@ -10,7 +10,12 @@ interface AcademyHeroProps {
   onStartQuiz?: () => void;
 }
 
-export function AcademyHero({ progress, onStartJourney, canAccessQuiz = false, onStartQuiz }: AcademyHeroProps) {
+export function AcademyHero({
+  progress,
+  onStartJourney,
+  canAccessQuiz = false,
+  onStartQuiz,
+}: AcademyHeroProps) {
   return (
     <motion.div
       initial={{ opacity: 0, y: -20 }}
@@ -24,24 +29,17 @@ export function AcademyHero({ progress, onStartJourney, canAccessQuiz = false, o
           <div className="w-14 h-14 rounded-2xl flex-shrink-0 flex items-center justify-center bg-black text-white dark:bg-blue-500/10 dark:text-blue-400">
             <GraduationCap className="h-6 w-6" />
           </div>
-          <h2 className="font-bold text-base text-black dark:text-white">
+          <h2 className="font-bold lg:text-xl text-lg text-black dark:text-white">
             Learn About BOB
           </h2>
         </div>
 
         {/* Description */}
         <p className="text-sm text-gray-700 dark:text-gray-400 mb-6">
-          {canAccessQuiz ? (
-            <>
-              Master the basics, test your knowledge...<br></br>
-              <b>Earn BDOG tokens!!!</b>
-            </>
-          ) : (
-            <>
-              Master the basics, test your knowledge...<br></br>
-              <b>Complete all lessons to unlock the quiz</b>
-            </>
-          )}
+          <>
+            Master the basics, test your knowledge...<br></br>
+            <b>Get BDOG tokens!!!</b>
+          </>
         </p>
 
         {/* Progress Section */}
@@ -87,4 +85,3 @@ export function AcademyHero({ progress, onStartJourney, canAccessQuiz = false, o
     </motion.div>
   );
 }
-

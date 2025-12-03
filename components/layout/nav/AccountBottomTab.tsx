@@ -102,7 +102,7 @@ export function AccountBottomTab({
           className={`
           fixed bottom-0 left-0 right-0 
           bg-background border-t border-border
-          z-50
+          z-40
           max-w-md mx-auto
           ${className}
         `}

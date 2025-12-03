@@ -7,6 +7,7 @@ import { Toaster } from "@/components/ui";
 import { GeneralProviders } from "@/providers/GeneralProviders";
 import { Sidebar } from "@/components/layout/nav";
 import { ConditionalBottomTab } from "@/components/layout/nav/ConditionalBottomTab";
+import { MobileLogoutButton } from "@/components/layout/nav/MobileLogoutButton";
 
 const inter = Inter({
   subsets: ['latin'],
@@ -80,11 +81,13 @@ export default function RootLayout({
           }}
         />
       </head>
-      <body className="bg-background">
+      <body className="bg-background select-none">
         {/* Desktop: Sidebar Navigation */}
         <div className="hidden lg:block">
           <Sidebar />
         </div>
+        {/* Mobile: Logout Button */}
+        <MobileLogoutButton />
         <GeneralProviders>
           {children}
         </GeneralProviders>

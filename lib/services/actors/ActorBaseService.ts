@@ -27,12 +27,42 @@ export abstract class ActorBaseService<T extends ActorSubclass<any>> {
   private _actor?: T;
 
   /**
+   * Cached promise for actor initialization to avoid multiple initializations
+   */
+  private _actorInitPromise?: Promise<T>;
+
+  /**
    * Lazy initialization getter for actor instance.
    * Actor is created only when first accessed.
+   * Ensures agent is fully initialized (root key fetched) before creating actor.
+   */
+  protected async getActor(): Promise<T> {
+    if (this._actor) {
+      return this._actor;
+    }
+
+    // Return cached promise if initialization is already in progress
+    if (this._actorInitPromise) {
+      return this._actorInitPromise;
+    }
+
+    // Initialize actor and cache the promise
+    this._actorInitPromise = createActor<T>(this.canisterName, this.idlFactory);
+    this._actor = await this._actorInitPromise;
+    
+    return this._actor;
+  }
+
+  /**
+   * @deprecated Use getActor() instead. This getter is kept for backward compatibility
+   * but will throw an error if actor is not already initialized.
    */
   protected get actor(): T {
     if (!this._actor) {
-      this._actor = createActor<T>(this.canisterName, this.idlFactory);
+      throw new Error(
+        `Actor for ${this.canisterName} is not initialized. ` +
+        `Use await getActor() instead, or ensure the actor is initialized first.`
+      );
     }
     return this._actor;
   }
@@ -74,11 +104,13 @@ export abstract class ActorBaseService<T extends ActorSubclass<any>> {
   /**
    * Returns all actors managed by this service for identity replacement.
    * Override this method if the service manages multiple actors.
+   * Ensures actors are initialized before returning them.
    * 
-   * @returns Array of { name, actor } objects
+   * @returns Promise resolving to array of { name, actor } objects
    */
-  getAllActors(): Array<{ name: string; actor: any }> {
-    return [{ name: this.canisterName, actor: this.actor }];
+  async getAllActors(): Promise<Array<{ name: string; actor: any }>> {
+    const actor = await this.getActor();
+    return [{ name: this.canisterName, actor }];
   }
 }
 

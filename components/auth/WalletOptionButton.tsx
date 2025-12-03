@@ -5,7 +5,11 @@ import { Button } from '@/components/ui/button';
 import { useAuthStore } from '@/store/auth-store';
 
 interface WalletOptionButtonProps {
-  icon: string;
+  icon: {
+    src: string;
+    width?: number;
+    height?: number;
+  }
   label: string;
   description?: string;
   identityProviderUrl: string;
@@ -25,18 +29,18 @@ export function WalletOptionButton({ icon, label, description, identityProviderU
   };
 
   return (
-    <div
+    <button
       className="flex flex-col bg-white text-black text-sm items-center gap-2 h-auto py-4 px-4 w-full"
       onClick={handleClick}
     >
-      <Image src={icon} alt={label} width={40} height={40} />
+      <Image src={icon.src} alt={label} width={icon.width ?? 48} height={icon.height ?? 48} />
       <span className="font-medium ">{label}</span>
       {description && (
-        <span className="text-black/70 text-xs text-center leading-tight max-w-full break-words">
+        <span className="text-black/70 font-medium normal-case text-xs text-center leading-tight max-w-full break-words">
           {description}
         </span>
       )}
-    </div>
+    </button>
   );
 }
 
