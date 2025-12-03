@@ -4,7 +4,7 @@ import { Principal } from '@dfinity/principal';
 import { useAuthStore } from '@/store/auth-store';
 import { useWalletStore, type Token } from '@/store/wallet-store';
 import { TokenService, DEFAULT_TOKENS } from '@/lib/token/tokenService';
-import { useTokenData } from '@/contexts/TokenDataProvider';
+import { useTokenData } from '@/providers/TokenDataProvider';
 
 // Token colors for icons (using chart colors from tailwind config)
 const TOKEN_COLORS = [

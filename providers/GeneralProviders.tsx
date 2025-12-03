@@ -2,8 +2,9 @@
 
 import { type ReactNode } from 'react';
 import { TooltipProvider } from '@/components/ui';
-import { AuthProvider } from '@/components/auth/AuthProvider';
-import { TokenDataProvider } from '@/contexts/TokenDataProvider';
+import { AuthProvider } from '@/providers/AuthProvider';
+import { TokenDataProvider } from '@/providers/TokenDataProvider';
+import { ActorServiceProvider } from '@/providers/ActorServiceProvider';
 import { ResourcePreloader } from '@/components/ResourcePreloader';
 
 interface GeneralProvidersProps {
@@ -14,13 +15,14 @@ export function GeneralProviders({ children }: GeneralProvidersProps) {
   return (
     <TooltipProvider>
       <AuthProvider>
-        <TokenDataProvider>
-          <ResourcePreloader />
-          {children}
-        </TokenDataProvider>
+        <ActorServiceProvider>
+          <TokenDataProvider>
+            <ResourcePreloader />
+            {children}
+          </TokenDataProvider>
+        </ActorServiceProvider>
       </AuthProvider>
     </TooltipProvider>
   );
 }
-
 

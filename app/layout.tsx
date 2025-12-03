@@ -4,7 +4,7 @@ import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
 import { Footer, Header } from "../components/layout";
 import { Toaster } from "@/components/ui";
-import { GeneralProviders } from "@/components/GeneralProviders";
+import { GeneralProviders } from "@/providers/GeneralProviders";
 import { Sidebar, BottomTab } from "@/components/layout/nav";
 
 const inter = Inter({

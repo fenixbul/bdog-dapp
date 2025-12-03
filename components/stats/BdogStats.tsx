@@ -1,6 +1,6 @@
 "use client";
 import React, { useState, useEffect } from 'react';
-import { useTokenData } from '@/contexts/TokenDataProvider';
+import { useTokenData } from '@/providers/TokenDataProvider';
 import { TrendingUp, TrendingDown, Users, BarChart3, Activity, Coins, FileText, Copy, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';

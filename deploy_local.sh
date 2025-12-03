@@ -98,6 +98,7 @@ MOTOKO_CANISTERS=(
     "players"
     "lobbies"
     "games"
+    "skill_module"
 )
 
 for canister in "${MOTOKO_CANISTERS[@]}"; do
@@ -208,4 +209,5 @@ echo ""
 print_status "Ready for development! 🚀"
 echo ""
 print_info "Quick test: ./canisters/scripts/interactive_game_tool.sh"
+print_info "Skill Module test: ./canisters/scripts/interactive_skill_module_tool.sh"
 

@@ -11,7 +11,8 @@ module.exports = {
   			background: 'hsl(var(--background))',
   			primary: {
   				DEFAULT: 'hsl(var(--primary))',
-  				foreground: 'hsl(var(--primary-foreground))'
+  				foreground: 'hsl(var(--primary-foreground))',
+  				dark: '#00cc7e'
   			},
   			foreground: 'hsl(var(--foreground))',
   			card: {

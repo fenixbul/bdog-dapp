@@ -3,5 +3,5 @@ export { ConnectWalletModal } from './ConnectWalletModal';
 export { WalletOptionButton } from './WalletOptionButton';
 export { AccessRequired } from './AccessRequired';
 export { AuthButton } from './AuthButton';
-export { AuthProvider } from './AuthProvider';
+export { AuthProvider } from '@/providers/AuthProvider';
 

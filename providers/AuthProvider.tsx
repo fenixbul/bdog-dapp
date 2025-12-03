@@ -4,7 +4,7 @@ import { useEffect, useState, type ReactNode } from 'react';
 import { usePathname } from 'next/navigation';
 import { useAuthStore } from '@/store/auth-store';
 import { LoadingOverlay } from '@/components/layout/LoadingOverlay';
-import { ConnectWalletModal } from './ConnectWalletModal';
+import { ConnectWalletModal } from '@/components/auth/ConnectWalletModal';
 
 interface AuthProviderProps {
   children: ReactNode;

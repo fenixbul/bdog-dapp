@@ -12,6 +12,7 @@
     --popover-foreground: 0 0% 100%; /* #FFFFFF - White text */
     --primary: 158 100% 50%; /* #00ff9e - Primary green color */
     --primary-foreground: 0 0% 0%; /* #000000 - Black text on green */
+    --primary-dark: 158 100% 40%; /* #00cc7e - Darker primary green for white backgrounds */
     --secondary: 0 0% 100%; /* #FFFFFF - White secondary text */
     --secondary-foreground: 0 0% 0%; /* #000000 - Black text */
     --muted: 0 0% 10%; /* #1a1a1a - Dark grey for borders/separators */

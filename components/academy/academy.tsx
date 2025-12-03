@@ -5,6 +5,9 @@ import { motion } from 'framer-motion';
 import { Coins, Scale, Pickaxe, CheckCircle, Flame, Shield, TrendingUp } from 'lucide-react';
 import { LessonCard } from './LessonCard';
 import { LessonModal } from './LessonModal';
+import { AcademyHero } from './AcademyHero';
+import { Quiz } from './Quiz';
+import { useAcademyProgress } from '@/hooks/use-academy-progress';
 import Image from 'next/image';
 
 export type Lesson = {
@@ -71,6 +74,16 @@ const lessons: Lesson[] = [
 export function Academy() {
   const [selectedLesson, setSelectedLesson] = useState<Lesson | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isQuizOpen, setIsQuizOpen] = useState(false);
+  const { 
+    markLessonViewed, 
+    isLessonViewed, 
+    getProgress, 
+    canAccessQuiz,
+    markQuizAttempt 
+  } = useAcademyProgress();
+  const progress = getProgress(lessons.length);
+  const quizAccessible = canAccessQuiz(lessons.length);
 
   const handleLessonClick = (lesson: Lesson) => {
     setSelectedLesson(lesson);
@@ -90,6 +103,34 @@ export function Academy() {
     setSelectedLesson(lessons[nextIndex]);
   };
 
+  const handlePreviousLesson = () => {
+    if (!selectedLesson) return;
+    const currentIndex = lessons.findIndex(l => l.id === selectedLesson.id);
+    const prevIndex = currentIndex > 0 ? currentIndex - 1 : 0;
+    setSelectedLesson(lessons[prevIndex]);
+  };
+
+  const handleStartJourney = () => {
+    if (lessons.length > 0) {
+      setSelectedLesson(lessons[0]);
+      setIsModalOpen(true);
+    }
+  };
+
+  const handleStartQuiz = () => {
+    markQuizAttempt();
+    setIsQuizOpen(true);
+  };
+
+  const handleQuizClose = () => {
+    setIsQuizOpen(false);
+  };
+
+  const handleQuizComplete = (score: number, totalQuestions: number) => {
+    // Quiz completion is handled in Quiz component
+    setIsQuizOpen(false);
+  };
+
   return (
     <div className="min-h-screen flex justify-center bg-background">
       {/* App Container */}
@@ -103,8 +144,16 @@ export function Academy() {
           </div>
         </header>
 
+        {/* Hero Section */}
+        <AcademyHero 
+          progress={progress} 
+          onStartJourney={handleStartJourney}
+          canAccessQuiz={quizAccessible}
+          onStartQuiz={handleStartQuiz}
+        />
+
         {/* Lesson List */}
-        <div className="px-6 py-6">
+        <div className="px-6 pb-6">
           {lessons.length === 0 ? (
             <div className="text-center py-12">
               <p className="text-muted-foreground">No lessons available</p>
@@ -143,6 +192,7 @@ export function Academy() {
                   <LessonCard
                     lesson={lesson}
                     onClick={() => handleLessonClick(lesson)}
+                    isViewed={isLessonViewed(lesson.id)}
                   />
                 </motion.div>
               ))}
@@ -158,8 +208,20 @@ export function Academy() {
             lesson={selectedLesson}
             lessons={lessons}
             onNextLesson={handleNextLesson}
+            onMarkViewed={markLessonViewed}
+            onPreviousLesson={handlePreviousLesson}
+            progress={progress}
+            canAccessQuiz={quizAccessible}
+            onStartQuiz={handleStartQuiz}
           />
         )}
+
+        {/* Quiz Modal */}
+        <Quiz
+          isOpen={isQuizOpen}
+          onClose={handleQuizClose}
+          onComplete={handleQuizComplete}
+        />
       </div>
     </div>
   );

@@ -2,15 +2,31 @@
     "canisters": {
         "players": {
             "main": "canisters/players.mo",
-            "type": "motoko"
+            "type": "motoko",
+            "declarations": {
+                "output": "lib/canisters/players"
+            }
         },
         "lobbies": {
             "main": "canisters/lobbies.mo",
-            "type": "motoko"
+            "type": "motoko",
+            "declarations": {
+                "output": "lib/canisters/lobbies"
+            }
         },
         "games": {
             "main": "canisters/games.mo",
-            "type": "motoko"
+            "type": "motoko",
+            "declarations": {
+                "output": "lib/canisters/games"
+            }
+        },
+        "skill_module": {
+            "main": "canisters/skill_module.mo",
+            "type": "motoko",
+            "declarations": {
+                "output": "lib/canisters/skill_module"
+            }
         },
         "site": {
             "type": "assets",
@@ -19,7 +35,10 @@
             },
             "source": [
                 "out"
-            ]
+            ],
+            "declarations": {
+                "output": "lib/canisters/site"
+            }
         },
         "site_preprod": {
             "type": "assets",
@@ -28,7 +47,10 @@
             },
             "source": [
                 "out"
-            ]
+            ],
+            "declarations": {
+                "output": "lib/canisters/site_preprod"
+            }
         }
     },
     "defaults": {
