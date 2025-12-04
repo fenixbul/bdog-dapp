@@ -100,11 +100,8 @@ export function QuizResults({
             <div className="text-3xl font-bold text-foreground mb-1">
               {score} / {totalQuestions}
             </div>
-            <div className="text-sm text-muted-foreground">
-              {percentage}% Correct
-            </div>
             {!passed && (
-              <div className="mt-2 text-xs text-muted-foreground">
+              <div className="mt-2 text-sm text-muted-foreground">
                 Need {Math.ceil(totalQuestions * 0.8)} correct to pass
               </div>
             )}
@@ -167,13 +164,6 @@ export function QuizResults({
           <div className="space-y-2">
             {!passed && (
               <>
-                <button
-                  onClick={onTryAgain}
-                  className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-primary text-primary-foreground rounded-lg font-medium hover:opacity-90 transition-opacity"
-                >
-                  <CheckCircle2 className="h-5 w-5" />
-                  <span>Try Again</span>
-                </button>
                 <button
                   onClick={onReviewLessons}
                   className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-secondary text-secondary-foreground rounded-lg font-medium hover:opacity-90 transition-opacity"

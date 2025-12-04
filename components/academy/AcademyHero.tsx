@@ -2,6 +2,7 @@
 
 import { motion } from "framer-motion";
 import { GraduationCap } from "lucide-react";
+import { useAuthStore } from "@/store/auth-store";
 
 interface AcademyHeroProps {
   progress: number;
@@ -16,6 +17,16 @@ export function AcademyHero({
   canAccessQuiz = false,
   onStartQuiz,
 }: AcademyHeroProps) {
+  const { isAuthenticated, openConnectModal } = useAuthStore();
+
+  const handleStartQuiz = () => {
+    if (!isAuthenticated) {
+      openConnectModal();
+    } else if (onStartQuiz) {
+      onStartQuiz();
+    }
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0, y: -20 }}
@@ -68,7 +79,7 @@ export function AcademyHero({
         {/* CTA Buttons */}
         {canAccessQuiz && onStartQuiz ? (
           <button
-            onClick={onStartQuiz}
+            onClick={handleStartQuiz}
             className="w-full bg-black text-white dark:bg-white dark:text-black px-6 py-4 rounded-xl font-semibold text-base shadow-md hover:shadow-lg transition-all duration-200 ease-out hover:scale-[1.02] active:scale-[0.98]"
           >
             Start Quiz

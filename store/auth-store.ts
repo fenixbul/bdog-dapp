@@ -22,6 +22,10 @@ export interface AuthStore extends AuthStoreData {
   signOut: () => Promise<void>;
   setPrincipal: (principal: string | null) => void;
   setAuthClient: (authClient: AuthClient | null) => void;
+  // Modal control
+  showConnectModal: boolean;
+  openConnectModal: () => void;
+  closeConnectModal: () => void;
 }
 
 export const useAuthStore = create<AuthStore>()(
@@ -35,6 +39,7 @@ export const useAuthStore = create<AuthStore>()(
       principalId: null,
       accountId: null,
       authClient: null,
+      showConnectModal: false,
       
       // Actions
       sync: async () => {
@@ -107,6 +112,7 @@ export const useAuthStore = create<AuthStore>()(
                 principal,
                 principalId,
                 accountId,
+                showConnectModal: false, // Close modal on successful login
               });
             },
             onError,
@@ -137,6 +143,10 @@ export const useAuthStore = create<AuthStore>()(
       setPrincipal: (principal) => set({ principal }),
       
       setAuthClient: (authClient) => set({ authClient }),
+      
+      openConnectModal: () => set({ showConnectModal: true }),
+      
+      closeConnectModal: () => set({ showConnectModal: false }),
     }),
     { name: 'auth-store' }
   )

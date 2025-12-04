@@ -61,9 +61,10 @@ shared ({ caller = initializer }) persistent actor class SkillModule() = this {
 
   // Quiz configuration with defaults
   private var quizConfig : SkillModuleTypes.QuizConfig = {
-    defaultTimeLimit = null;
+    defaultTimeLimit = ?(60 * 1_000_000_000); // 1 minute in nanoseconds
     defaultPassingScore = 80; // 80% passing score
-    defaultAttemptDelaySeconds = 3600; // 1 hour delay
+    // defaultAttemptDelaySeconds = 3600; // 1 hour delay
+    defaultAttemptDelaySeconds = 60; // 1 minute delay
   };
 
   // --- Save data before upgrade ---
@@ -254,8 +255,58 @@ shared ({ caller = initializer }) persistent actor class SkillModule() = this {
     };
   };
 
+  // Helper function to strip correct answers from quiz
+  func stripQuizAnswers(quiz : SkillModuleTypes.Quiz) : SkillModuleTypes.QuizWithoutAnswers {
+    let questionsWithoutAnswers = Array.tabulate<SkillModuleTypes.QuestionWithoutAnswer>(
+      quiz.questions.size(),
+      func(i : Nat) : SkillModuleTypes.QuestionWithoutAnswer {
+        let question = quiz.questions[i];
+        {
+          id = question.id;
+          questionText = question.questionText;
+          options = question.options;
+          points = question.points;
+        };
+      }
+    );
+    {
+      id = quiz.id;
+      title = quiz.title;
+      description = quiz.description;
+      questions = questionsWithoutAnswers;
+      passingScore = quiz.passingScore;
+      timeLimit = quiz.timeLimit;
+    };
+  };
+
+  // Helper function to get effective time limit (quiz.timeLimit or defaultTimeLimit)
+  func getEffectiveTimeLimit(quiz : SkillModuleTypes.Quiz) : ?Time.Time {
+    switch (quiz.timeLimit) {
+      case (?timeLimit) { ?timeLimit };
+      case (null) { quizConfig.defaultTimeLimit };
+    };
+  };
+
+  // Helper function to check if delay is met, returns error message if not met
+  func checkDelayMet(referenceTime : Time.Time, currentTime : Time.Time) : ?Text {
+    let delayNanoseconds = quizConfig.defaultAttemptDelaySeconds * 1_000_000_000;
+    let nextAllowedTime = referenceTime + delayNanoseconds;
+
+    if (currentTime < nextAllowedTime) {
+      let remainingSecondsInt = (nextAllowedTime - currentTime) / 1_000_000_000;
+      let remainingSeconds = if (remainingSecondsInt >= 0) {
+        Int.abs(remainingSecondsInt);
+      } else {
+        0;
+      };
+      ?("Delay not met. Please wait " # Nat.toText(remainingSeconds) # " seconds");
+    } else {
+      null;
+    };
+  };
+
   // Start a quiz attempt (msg.caller)
-  public shared (msg) func start_quiz(moduleId : SkillModuleTypes.ModuleId, quizId : SkillModuleTypes.QuizId) : async Result.Result<SkillModuleTypes.Quiz, Text> {
+  public shared (msg) func start_quiz(moduleId : SkillModuleTypes.ModuleId, quizId : SkillModuleTypes.QuizId) : async Result.Result<SkillModuleTypes.QuizStartResponse, Text> {
     // Reject anonymous callers
     if (Principal.isAnonymous(msg.caller)) {
       return #err("Unauthorized");
@@ -292,26 +343,55 @@ shared ({ caller = initializer }) persistent actor class SkillModule() = this {
 
         switch (existingAttempt) {
           case (?attempt) {
+            let currentTime = Time.now();
+
             // Check if attempt is completed
             switch (attempt.completedAt) {
               case (null) {
-                // Attempt in progress
-                return #err("Attempt in progress");
+                // Attempt in progress - check time limit
+                switch (quizToReturn) {
+                  case (?quiz) {
+                    let effectiveTimeLimit = getEffectiveTimeLimit(quiz);
+                    var timeExceeded = false;
+                    switch (effectiveTimeLimit) {
+                      case (?timeLimit) {
+                        let timeLimitEnd = attempt.quizStartedAt + timeLimit;
+                        timeExceeded := currentTime > timeLimitEnd;
+                      };
+                      case (null) {};
+                    };
+                    
+                    if (not timeExceeded) {
+                      // Within time window - return quiz to continue
+                      return #ok({
+                        quiz = stripQuizAnswers(quiz);
+                        quizStartedAt = attempt.quizStartedAt;
+                        timeLimit = effectiveTimeLimit;
+                      });
+                    } else {
+                      // Time limit exceeded - check delay before allowing new attempt
+                      switch (checkDelayMet(attempt.quizStartedAt, currentTime)) {
+                        case (?errorMsg) {
+                          return #err(errorMsg);
+                        };
+                        case (null) {
+                          // Delay met - fall through to create new attempt
+                        };
+                      };
+                    };
+                  };
+                  case (null) { return #err("Quiz not found"); };
+                };
               };
               case (?completedAt) {
-                // Check delay
-                let currentTime = Time.now();
-                let delayNanoseconds = quizConfig.defaultAttemptDelaySeconds * 1_000_000_000;
-                let nextAllowedTime = completedAt + delayNanoseconds;
-
-                if (currentTime < nextAllowedTime) {
-                  let remainingSecondsInt = (nextAllowedTime - currentTime) / 1_000_000_000;
-                  let remainingSeconds = if (remainingSecondsInt >= 0) {
-                    Int.abs(remainingSecondsInt);
-                  } else {
-                    0;
+                // Attempt completed - check delay
+                switch (checkDelayMet(completedAt, currentTime)) {
+                  case (?errorMsg) {
+                    return #err(errorMsg);
                   };
-                  return #err("Delay not met. Please wait " # Nat.toText(remainingSeconds) # " seconds");
+                  case (null) {
+                    // Delay met - allow new attempt
+                  };
                 };
               };
             };
@@ -333,9 +413,16 @@ shared ({ caller = initializer }) persistent actor class SkillModule() = this {
 
         quizAttempts.put(attemptKey, newAttempt);
 
-        // Return the quiz with questions
+        // Return the quiz with questions (without correct answers) and attempt start time
         switch (quizToReturn) {
-          case (?quiz) { return #ok(quiz); };
+          case (?quiz) {
+            let effectiveTimeLimit = getEffectiveTimeLimit(quiz);
+            return #ok({
+              quiz = stripQuizAnswers(quiz);
+              quizStartedAt = newAttempt.quizStartedAt;
+              timeLimit = effectiveTimeLimit;
+            });
+          };
           case (null) { return #err("Quiz not found"); };
         };
       };
@@ -391,6 +478,19 @@ shared ({ caller = initializer }) persistent actor class SkillModule() = this {
                 return #err("Quiz not found");
               };
               case (?quiz) {
+                // Check time limit
+                let currentTime = Time.now();
+                let effectiveTimeLimit = getEffectiveTimeLimit(quiz);
+                switch (effectiveTimeLimit) {
+                  case (?timeLimit) {
+                    let timeLimitEnd = attempt.quizStartedAt + timeLimit;
+                    if (currentTime > timeLimitEnd) {
+                      return #err("Time limit exceeded");
+                    };
+                  };
+                  case (null) {};
+                };
+
                 // Validate all questions answered
                 if (answers.size() != quiz.questions.size()) {
                   return #err("Invalid answer count. Expected " # Nat.toText(quiz.questions.size()) # " answers");

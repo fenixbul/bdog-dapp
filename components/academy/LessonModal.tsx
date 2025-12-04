@@ -1,9 +1,9 @@
-'use client';
+"use client";
 
-import { useEffect } from 'react';
-import { AnimatePresence, motion } from 'framer-motion';
-import { X, Lightbulb, ChevronRight, ChevronLeft } from 'lucide-react';
-import type { Lesson } from './academy';
+import { useEffect } from "react";
+import { AnimatePresence, motion } from "framer-motion";
+import { X, Lightbulb, ChevronRight, ChevronLeft } from "lucide-react";
+import type { Lesson } from "./academy";
 
 interface LessonModalProps {
   isOpen: boolean;
@@ -18,19 +18,19 @@ interface LessonModalProps {
   onStartQuiz?: () => void;
 }
 
-export function LessonModal({ 
-  isOpen, 
-  onClose, 
-  lesson, 
-  lessons, 
-  onNextLesson, 
+export function LessonModal({
+  isOpen,
+  onClose,
+  lesson,
+  lessons,
+  onNextLesson,
   onMarkViewed,
   onPreviousLesson,
   progress,
   canAccessQuiz = false,
-  onStartQuiz
+  onStartQuiz,
 }: LessonModalProps) {
-  const currentIndex = lessons.findIndex(l => l.id === lesson.id);
+  const currentIndex = lessons.findIndex((l) => l.id === lesson.id);
   const isLastLesson = currentIndex === lessons.length - 1;
   const isFirstLesson = currentIndex === 0;
 
@@ -56,11 +56,11 @@ export function LessonModal({
 
           {/* Modal Container (Bottom Sheet) */}
           <motion.div
-            initial={{ y: '100%' }}
+            initial={{ y: "100%" }}
             animate={{ y: 0 }}
-            exit={{ y: '100%' }}
+            exit={{ y: "100%" }}
             transition={{
-              type: 'spring',
+              type: "spring",
               damping: 25,
               stiffness: 300,
             }}
@@ -94,28 +94,30 @@ export function LessonModal({
                 {lesson.subtitle}
               </p>
 
-              {/* Progress Section */}
-              <div className="mb-6">
-                {/* Progress Percentage */}
-                <div className="flex items-baseline justify-between mb-2">
-                  <span className="text-xs font-medium text-white/70 uppercase tracking-wide">
-                    Progress
-                  </span>
-                  <span className="text-3xl font-bold text-white">
-                    {progress}%
-                  </span>
-                </div>
+              {/* Progress Section - Show only if under 100 */}
+              {progress < 100 && (
+                <div className="mb-6">
+                  {/* Progress Percentage */}
+                  <div className="flex items-baseline justify-between mb-2">
+                    <span className="text-xs font-medium text-white/70 uppercase tracking-wide">
+                      Progress
+                    </span>
+                    <span className="text-3xl font-bold text-white">
+                      {progress}%
+                    </span>
+                  </div>
 
-                {/* Progress Bar */}
-                <div className="w-full h-3 bg-white/10 rounded-full overflow-hidden">
-                  <motion.div
-                    initial={{ width: 0 }}
-                    animate={{ width: `${progress}%` }}
-                    transition={{ duration: 0.6, ease: [0.25, 0.1, 0.25, 1] }}
-                    className="h-full bg-white rounded-full"
-                  />
+                  {/* Progress Bar */}
+                  <div className="w-full h-3 bg-white/10 rounded-full overflow-hidden">
+                    <motion.div
+                      initial={{ width: 0 }}
+                      animate={{ width: `${progress}%` }}
+                      transition={{ duration: 0.6, ease: [0.25, 0.1, 0.25, 1] }}
+                      className="h-full bg-white rounded-full"
+                    />
+                  </div>
                 </div>
-              </div>
+              )}
 
               {/* Content Body */}
               <div className="text-foreground leading-relaxed mb-6">
@@ -131,8 +133,8 @@ export function LessonModal({
                     disabled={isFirstLesson}
                     className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-lg font-medium transition-opacity ${
                       isFirstLesson
-                        ? 'bg-muted text-muted-foreground cursor-not-allowed opacity-50'
-                        : 'bg-secondary text-secondary-foreground hover:opacity-90'
+                        ? "bg-muted text-muted-foreground cursor-not-allowed opacity-50"
+                        : "bg-secondary text-secondary-foreground hover:opacity-90"
                     }`}
                     aria-label="Previous lesson"
                   >
@@ -142,15 +144,24 @@ export function LessonModal({
 
                   {/* Next Button */}
                   <button
-                    onClick={isLastLesson && canAccessQuiz && onStartQuiz ? onStartQuiz : onNextLesson}
+                    onClick={
+                      isLastLesson && canAccessQuiz && onStartQuiz
+                        ? onStartQuiz
+                        : onNextLesson
+                    }
                     className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-primary text-primary-foreground rounded-lg hover:opacity-90 transition-opacity font-medium"
-                    aria-label={isLastLesson && canAccessQuiz ? "Start Quiz" : "Next lesson"}
+                    aria-label={
+                      isLastLesson && canAccessQuiz
+                        ? "Start Quiz"
+                        : "Next lesson"
+                    }
                   >
                     <span>
-                      {isLastLesson 
-                        ? (canAccessQuiz ? 'Start Quiz' : 'Back to Start')
-                        : 'Next'
-                      }
+                      {isLastLesson
+                        ? canAccessQuiz
+                          ? "Start Quiz"
+                          : "Back to Start"
+                        : "Next"}
                     </span>
                     <ChevronRight className="h-5 w-5" />
                   </button>
@@ -163,4 +174,3 @@ export function LessonModal({
     </AnimatePresence>
   );
 }
-

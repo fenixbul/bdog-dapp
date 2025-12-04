@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, type ReactNode } from 'react';
+import { useEffect, type ReactNode } from 'react';
 import { usePathname } from 'next/navigation';
 import { useAuthStore } from '@/store/auth-store';
 import { LoadingOverlay } from '@/components/layout/LoadingOverlay';
@@ -15,9 +15,8 @@ interface AuthProviderProps {
 const PROTECTED_ROUTES = ['/wallet'];
 
 export function AuthProvider({ children }: AuthProviderProps) {
-  const { sync, isInitialized, isAuthenticated } = useAuthStore();
+  const { sync, isInitialized, isAuthenticated, showConnectModal, closeConnectModal } = useAuthStore();
   const pathname = usePathname();
-  const [showConnectModal, setShowConnectModal] = useState(false);
 
   // Sync auth on mount
   useEffect(() => {
@@ -33,22 +32,28 @@ export function AuthProvider({ children }: AuthProviderProps) {
   // Close modal automatically when authenticated
   useEffect(() => {
     if (isInitialized && !isAuthenticated && isProtectedRoute) {
-      setShowConnectModal(true);
+      useAuthStore.getState().openConnectModal();
     } else if (isAuthenticated) {
-      setShowConnectModal(false);
+      closeConnectModal();
     }
-  }, [isInitialized, isAuthenticated, isProtectedRoute]);
+  }, [isInitialized, isAuthenticated, isProtectedRoute, closeConnectModal]);
 
   return (
     <>
       {/* Show loading overlay while auth is initializing */}
       {!isInitialized && <LoadingOverlay />}
       
-      {/* Show ConnectWalletModal for protected routes when not authenticated */}
+      {/* Show ConnectWalletModal - can be triggered from any component via auth store */}
       {isInitialized && (
         <ConnectWalletModal 
           open={showConnectModal} 
-          onOpenChange={setShowConnectModal} 
+          onOpenChange={(open) => {
+            if (open) {
+              useAuthStore.getState().openConnectModal();
+            } else {
+              closeConnectModal();
+            }
+          }} 
         />
       )}
       

@@ -11,6 +11,8 @@ import type {
   QuizConfig,
   QuizFeedback,
   AnswerSubmission,
+  QuizStartResponse,
+  Result_4,
 } from "@/lib/canisters/skill_module/skill_module.did";
 import type { Principal } from "@dfinity/principal";
 
@@ -58,9 +60,9 @@ export class SkillModuleService extends ActorBaseService<SkillModuleServiceType>
    * Start a quiz attempt.
    * @param moduleId - The ID of the module containing the quiz
    * @param quizId - The ID of the quiz to start
-   * @returns The quiz attempt
+   * @returns The quiz start response containing quiz and quizStartedAt timestamp
    */
-  async startQuiz(moduleId: ModuleId, quizId: QuizId): Promise<Quiz> {
+  async startQuiz(moduleId: ModuleId, quizId: QuizId): Promise<QuizStartResponse> {
     return this.callCanister(
       async () => {
         const actor = await this.getActor();
@@ -75,20 +77,15 @@ export class SkillModuleService extends ActorBaseService<SkillModuleServiceType>
    * @param moduleId - The ID of the module containing the quiz
    * @param quizId - The ID of the quiz
    * @param answers - Array of answer submissions
-   * @returns Quiz feedback with score and correctness information
+   * @returns Result containing quiz feedback with score and correctness information, or error
    */
   async answerQuiz(
     moduleId: ModuleId,
     quizId: QuizId,
     answers: Array<AnswerSubmission>
-  ): Promise<QuizFeedback> {
-    return this.callCanister(
-      async () => {
-        const actor = await this.getActor();
-        return actor.answer_quiz(moduleId, quizId, answers);
-      },
-      "answer quiz"
-    );
+  ): Promise<Result_4> {
+    const actor = await this.getActor();
+    return actor.answer_quiz(moduleId, quizId, answers);
   }
 
   /**

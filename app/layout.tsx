@@ -91,6 +91,7 @@ export default function RootLayout({
         <GeneralProviders>
           {children}
         </GeneralProviders>
+        <Toaster />
         {/* Mobile: Bottom Tab Navigation */}
         <div className="lg:hidden">
           <ConditionalBottomTab />

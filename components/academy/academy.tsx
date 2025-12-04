@@ -26,6 +26,7 @@ export function Academy() {
   const [isQuizOpen, setIsQuizOpen] = useState(false);
   const [isLoadingModule, setIsLoadingModule] = useState(true);
   const [lessons, setLessons] = useState<Lesson[]>([]);
+  const [moduleData, setModuleData] = useState<Module | null>(null);
   const { skillModuleService } = useActorServices();
   const { 
     markLessonViewed, 
@@ -44,6 +45,9 @@ export function Academy() {
         const fetchedModule = await skillModuleService.getModule(1n);
         
         if (fetchedModule) {
+          // Store module data for quiz access
+          setModuleData(fetchedModule);
+          
           // Map Module lessons to component Lesson format
           const mappedLessons = fetchedModule.lessons
             .sort((a, b) => Number(a.order - b.order))
@@ -88,6 +92,12 @@ export function Academy() {
 
   const progress = getProgress(lessons.length);
   const quizAccessible = canAccessQuiz(lessons.length);
+  
+  // Extract quiz ID from module data (use first quiz if multiple exist, default to quiz ID 1)
+  const quizId = moduleData?.quizzes && moduleData.quizzes.length > 0 
+    ? moduleData.quizzes[0].id 
+    : 1n;
+  const moduleId = 1n; // Module ID is hardcoded to 1
 
   const handleLessonClick = (lesson: Lesson) => {
     setSelectedLesson(lesson);
@@ -128,6 +138,14 @@ export function Academy() {
 
   const handleQuizClose = () => {
     setIsQuizOpen(false);
+  };
+
+  const handleReviewLessons = () => {
+    setIsQuizOpen(false);
+    if (lessons.length > 0) {
+      setSelectedLesson(lessons[0]);
+      setIsModalOpen(true);
+    }
   };
 
   const handleQuizComplete = (score: number, totalQuestions: number) => {
@@ -228,6 +246,9 @@ export function Academy() {
           isOpen={isQuizOpen}
           onClose={handleQuizClose}
           onComplete={handleQuizComplete}
+          moduleId={moduleId}
+          quizId={quizId}
+          onReviewLessons={handleReviewLessons}
         />
       </div>
     </div>

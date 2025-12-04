@@ -223,3 +223,90 @@ export function formatAmount(
     maximumFractionDigits: 2,
   }).format(Number(num));
 }
+
+/**
+ * Format seconds into human-readable duration string
+ * Examples:
+ * - 30 -> "30 seconds"
+ * - 90 -> "1 minute 30 seconds"
+ * - 3661 -> "1 hour 1 minute 1 second"
+ * - 90000 -> "1 day 1 hour"
+ * 
+ * @param seconds - Number of seconds to format
+ * @param options - Formatting options
+ * @returns Human-readable duration string
+ */
+export function formatDuration(
+  seconds: number | string,
+  options: {
+    compact?: boolean; // If true, use shorter format (e.g., "1h 30m" instead of "1 hour 30 minutes")
+  } = {}
+): string {
+  const { compact = false } = options;
+  
+  const totalSeconds = typeof seconds === 'string' ? parseInt(seconds, 10) : Math.floor(seconds);
+  
+  if (isNaN(totalSeconds) || totalSeconds < 0) {
+    return '0 seconds';
+  }
+  
+  if (totalSeconds === 0) {
+    return '0 seconds';
+  }
+  
+  // Calculate all unit values
+  const days = Math.floor(totalSeconds / 86400);
+  const hours = Math.floor((totalSeconds % 86400) / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const secs = totalSeconds % 60;
+  
+  const parts: string[] = [];
+  
+  // If days exist, show days and hours (if hours > 0)
+  if (days > 0) {
+    if (compact) {
+      parts.push(`${days}d`);
+      if (hours > 0) {
+        parts.push(`${hours}h`);
+      }
+    } else {
+      parts.push(`${days} ${days === 1 ? 'day' : 'days'}`);
+      if (hours > 0) {
+        parts.push(`${hours} ${hours === 1 ? 'hour' : 'hours'}`);
+      }
+    }
+  } else if (hours > 0) {
+    // Only hours, no days - show just hours
+    if (compact) {
+      parts.push(`${hours}h`);
+    } else {
+      parts.push(`${hours} ${hours === 1 ? 'hour' : 'hours'}`);
+    }
+  } else if (minutes > 0) {
+    // Only minutes, no days/hours - show just minutes
+    if (compact) {
+      parts.push(`${minutes}m`);
+    } else {
+      parts.push(`${minutes} ${minutes === 1 ? 'minute' : 'minutes'}`);
+    }
+  } else {
+    // Only seconds - show just seconds
+    if (compact) {
+      parts.push(`${secs}s`);
+    } else {
+      parts.push(`${secs} ${secs === 1 ? 'second' : 'seconds'}`);
+    }
+  }
+  
+  // Join parts with appropriate separator
+  if (compact) {
+    return parts.join(' ');
+  }
+  
+  if (parts.length === 1) {
+    return parts[0];
+  } else {
+    // Only case with 2 parts is days + hours
+    return `${parts[0]} and ${parts[1]}`;
+  }
+}

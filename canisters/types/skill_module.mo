@@ -30,6 +30,24 @@ module {
     timeLimit : ?Time.Time; // optional time limit in nanoseconds
   };
 
+  // Question Type Without Answer (for public quiz start)
+  public type QuestionWithoutAnswer = {
+    id : QuestionId;
+    questionText : Text;
+    options : [Text];
+    points : Nat;
+  };
+
+  // Quiz Type Without Answers (for public quiz start)
+  public type QuizWithoutAnswers = {
+    id : QuizId;
+    title : Text;
+    description : ?Text;
+    questions : [QuestionWithoutAnswer];
+    passingScore : Nat; // percentage (0-100)
+    timeLimit : ?Time.Time; // optional time limit in nanoseconds
+  };
+
   // Quiz Summary Type (without questions, for get_module)
   public type QuizSummary = {
     id : QuizId;
@@ -85,9 +103,16 @@ module {
     correctAnswers : [Bool]; // per-question correctness
   };
 
+  // Quiz Start Response Type (quiz data with attempt start time and time limit)
+  public type QuizStartResponse = {
+    quiz : QuizWithoutAnswers;
+    quizStartedAt : Time.Time;
+    timeLimit : ?Time.Time;
+  };
+
   // Quiz Configuration Type
   public type QuizConfig = {
-    defaultTimeLimit : ?Time.Time;
+    defaultTimeLimit : ?Time.Time; // optional default time limit in nanoseconds
     defaultPassingScore : Nat; // percentage (0-100)
     defaultAttemptDelaySeconds : Nat; // delay in seconds between attempts
   };
