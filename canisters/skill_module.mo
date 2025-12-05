@@ -23,6 +23,7 @@ shared ({ caller = initializer }) persistent actor class SkillModule() = this {
   private var moduleStorage : [(SkillModuleTypes.ModuleId, SkillModuleTypes.Module)] = [];
   private var quizStorage : [(SkillModuleTypes.ModuleId, [SkillModuleTypes.Quiz])] = []; // Store full Quiz data separately
   private var attemptStorage : [((Principal, SkillModuleTypes.ModuleId, SkillModuleTypes.QuizId), SkillModuleTypes.QuizAttempt)] = [];
+  private var completionStorage : [((Principal, SkillModuleTypes.ModuleId), Time.Time)] = [];
 
   // Hash and equal functions for Nat (ModuleId)
   func nEqual(a : SkillModuleTypes.ModuleId, b : SkillModuleTypes.ModuleId) : Bool {
@@ -50,11 +51,27 @@ shared ({ caller = initializer }) persistent actor class SkillModule() = this {
     principalHash ^ moduleHash ^ quizHash;
   };
 
+  // Helper functions for completion key equality and hashing
+  func completionKeyEqual(a : (Principal, SkillModuleTypes.ModuleId), b : (Principal, SkillModuleTypes.ModuleId)) : Bool {
+    let (principalA, moduleIdA) = a;
+    let (principalB, moduleIdB) = b;
+    principalA == principalB and moduleIdA == moduleIdB;
+  };
+
+  func completionKeyHash(key : (Principal, SkillModuleTypes.ModuleId)) : Nat32 {
+    let (principal, moduleId) = key;
+    let principalBlob = Principal.toBlob(principal);
+    let principalHash = Blob.hash(principalBlob);
+    let moduleHash = Nat32.fromNat(moduleId);
+    principalHash ^ moduleHash;
+  };
+
   // Transient working maps
   private transient var modules = TrieMap.TrieMap<SkillModuleTypes.ModuleId, SkillModuleTypes.Module>(nEqual, nHash);
   private transient var lessonBuffers = TrieMap.TrieMap<SkillModuleTypes.ModuleId, Buffer.Buffer<SkillModuleTypes.Lesson>>(nEqual, nHash);
   private transient var quizBuffers = TrieMap.TrieMap<SkillModuleTypes.ModuleId, Buffer.Buffer<SkillModuleTypes.Quiz>>(nEqual, nHash);
   private transient var quizAttempts = TrieMap.TrieMap<(Principal, SkillModuleTypes.ModuleId, SkillModuleTypes.QuizId), SkillModuleTypes.QuizAttempt>(attemptKeyEqual, attemptKeyHash);
+  private transient var moduleCompletions = TrieMap.TrieMap<(Principal, SkillModuleTypes.ModuleId), Time.Time>(completionKeyEqual, completionKeyHash);
 
   // Module ID counter
   private var nextModuleId : SkillModuleTypes.ModuleId = 1;
@@ -107,6 +124,7 @@ shared ({ caller = initializer }) persistent actor class SkillModule() = this {
     };
     moduleStorage := Buffer.toArray(updatedModules);
     attemptStorage := Iter.toArray(quizAttempts.entries());
+    completionStorage := Iter.toArray(moduleCompletions.entries());
   };
 
   // --- Restore after upgrade ---
@@ -115,6 +133,7 @@ shared ({ caller = initializer }) persistent actor class SkillModule() = this {
     lessonBuffers := TrieMap.TrieMap<SkillModuleTypes.ModuleId, Buffer.Buffer<SkillModuleTypes.Lesson>>(nEqual, nHash);
     quizBuffers := TrieMap.TrieMap<SkillModuleTypes.ModuleId, Buffer.Buffer<SkillModuleTypes.Quiz>>(nEqual, nHash);
     quizAttempts := TrieMap.TrieMap<(Principal, SkillModuleTypes.ModuleId, SkillModuleTypes.QuizId), SkillModuleTypes.QuizAttempt>(attemptKeyEqual, attemptKeyHash);
+    moduleCompletions := TrieMap.TrieMap<(Principal, SkillModuleTypes.ModuleId), Time.Time>(completionKeyEqual, completionKeyHash);
 
     // Restore modules and recreate buffers
     for ((moduleId, modData) in moduleStorage.vals()) {
@@ -154,6 +173,11 @@ shared ({ caller = initializer }) persistent actor class SkillModule() = this {
     // Restore quiz attempts
     for ((key, attempt) in attemptStorage.vals()) {
       quizAttempts.put(key, attempt);
+    };
+
+    // Restore module completions
+    for ((key, completedAt) in completionStorage.vals()) {
+      moduleCompletions.put(key, completedAt);
     };
   };
 
@@ -217,8 +241,8 @@ shared ({ caller = initializer }) persistent actor class SkillModule() = this {
     return #ok(newModule);
   };
 
-  // Get module by ID (public query)
-  public shared query func get_module(moduleId : SkillModuleTypes.ModuleId) : async ?SkillModuleTypes.Module {
+  // Get module by ID with user state
+  public shared (msg) func get_module(moduleId : SkillModuleTypes.ModuleId) : async ?SkillModuleTypes.ModuleWithUserState {
     let moduleOpt = modules.get(moduleId);
     switch (moduleOpt) {
       case (?modData) {
@@ -244,14 +268,60 @@ shared ({ caller = initializer }) persistent actor class SkillModule() = this {
           });
         };
 
-        // Return module with arrays from buffers (quizzes without questions)
-        ?{
+        // Build module with arrays from buffers (quizzes without questions)
+        let moduleWithArrays : SkillModuleTypes.Module = {
           modData with
           lessons = Buffer.toArray(lessonsBuffer);
           quizzes = Buffer.toArray(quizzesSummary);
         };
+
+        // Check user completion state
+        let (isCompleted, completedAt) = if (Principal.isAnonymous(msg.caller)) {
+          // Anonymous users have not completed any modules
+          (false, null);
+        } else {
+          // Look up completion for this user and module
+          let completionKey = (msg.caller, moduleId);
+          switch (moduleCompletions.get(completionKey)) {
+            case (?timestamp) {
+              (true, ?timestamp);
+            };
+            case (null) {
+              (false, null);
+            };
+          };
+        };
+
+        // Return module with user state
+        let result : SkillModuleTypes.ModuleWithUserState = {
+          moduleData = moduleWithArrays;
+          isCompleted = isCompleted;
+          completedAt = completedAt;
+        };
+        ?result
       };
       case (null) { null };
+    };
+  };
+
+  // Mark module as completed for caller
+  public shared (msg) func mark_module_completed(moduleId : SkillModuleTypes.ModuleId) : async Result.Result<(), Text> {
+    // Reject anonymous callers
+    if (Principal.isAnonymous(msg.caller)) {
+      return #err("Unauthorized");
+    };
+    
+    // Check if module exists
+    switch (modules.get(moduleId)) {
+      case (null) {
+        return #err("Module not found");
+      };
+      case (?_) {
+        // Store completion timestamp
+        let completionKey = (msg.caller, moduleId);
+        moduleCompletions.put(completionKey, Time.now());
+        return #ok(());
+      };
     };
   };
 
@@ -545,6 +615,12 @@ shared ({ caller = initializer }) persistent actor class SkillModule() = this {
                 };
 
                 quizAttempts.put(attemptKey, updatedAttempt);
+
+                // If quiz passed, mark module as completed
+                if (isPassing) {
+                  let completionKey = (msg.caller, moduleId);
+                  moduleCompletions.put(completionKey, Time.now());
+                };
 
                 // Return feedback
                 let feedback : SkillModuleTypes.QuizFeedback = {

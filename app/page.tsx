@@ -58,7 +58,7 @@ export default function LandingPage() {
               {/* Primary CTA */}
               <div className="mb-6 flex flex-col sm:flex-row gap-3 max-w-sm">
                 <a 
-                  href="https://app.icpswap.com/swap/pro?input=ryjl3-tyaaa-aaaaa-aaaba-cai&output=2qqix-tiaaa-aaaam-qeria-cai"
+                  href="https://app.icpswap.com/swap?input=ryjl3-tyaaa-aaaaa-aaaba-cai&output=2qqix-tiaaa-aaaam-qeria-cai"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-block"
@@ -137,7 +137,7 @@ export default function LandingPage() {
             {/* Primary CTA */}
             <div className="space-y-3 max-w-sm mx-auto">
               <a 
-                href="https://app.icpswap.com/swap/pro?input=ryjl3-tyaaa-aaaaa-aaaba-cai&output=2qqix-tiaaa-aaaam-qeria-cai"
+                href="https://app.icpswap.com/swap?input=ryjl3-tyaaa-aaaaa-aaaba-cai&output=2qqix-tiaaa-aaaam-qeria-cai"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-block w-full"

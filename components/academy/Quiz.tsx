@@ -26,6 +26,7 @@ interface QuizProps {
   quizId: bigint;
   totalTime?: number; // in seconds, default 90 (1 minute 30 seconds) - fallback if backend doesn't provide timeLimit
   onReviewLessons?: () => void;
+  onModuleCompleted?: () => void;
 }
 
 export function Quiz({ 
@@ -35,7 +36,8 @@ export function Quiz({
   moduleId,
   quizId,
   totalTime = 90,
-  onReviewLessons: onReviewLessonsProp
+  onReviewLessons: onReviewLessonsProp,
+  onModuleCompleted
 }: QuizProps) {
   const { skillModuleService } = useActorServices();
   const { toast } = useToast();
@@ -79,7 +81,7 @@ export function Quiz({
   const timerIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const timeRef = useRef(timeRemaining);
   const submitStartTimeRef = useRef<number | null>(null);
-  const { markQuizCompleted, isRewardClaimed, markRewardClaimed } = useAcademyProgress();
+  const { isRewardClaimed, markRewardClaimed } = useAcademyProgress();
 
   // Transform backend QuizWithoutAnswers to frontend QuizQuestion format
   const transformBackendQuiz = (backendQuiz: QuizWithoutAnswers): QuizQuestion[] => {
@@ -323,8 +325,10 @@ export function Quiz({
         setShowResults(true);
         setIsSubmitting(false);
         submitStartTimeRef.current = null;
-        if (quizResult.score >= Math.ceil(quizResult.totalQuestions * 0.8)) {
-          markQuizCompleted();
+        // Backend already marks module as completed when quiz passes
+        // Call callback to refresh module state in parent component
+        if (feedback.isCorrect && onModuleCompleted) {
+          onModuleCompleted();
         }
       }, remaining);
     } catch (error) {

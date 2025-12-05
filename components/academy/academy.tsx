@@ -6,10 +6,11 @@ import { LessonCard } from './LessonCard';
 import { LessonModal } from './LessonModal';
 import { AcademyHero } from './AcademyHero';
 import { Quiz } from './Quiz';
+import { ModulePassedState } from './ModulePassedState';
 import { useAcademyProgress } from '@/hooks/use-academy-progress';
 import { useActorServices } from '@/providers/ActorServiceProvider';
 import { LoadingOverlay } from '@/components/layout/LoadingOverlay';
-import type { Module } from '@/lib/canisters/skill_module/skill_module.did';
+import type { ModuleWithUserState } from '@/lib/canisters/skill_module/skill_module.did';
 import Image from 'next/image';
 
 export type Lesson = {
@@ -26,7 +27,7 @@ export function Academy() {
   const [isQuizOpen, setIsQuizOpen] = useState(false);
   const [isLoadingModule, setIsLoadingModule] = useState(true);
   const [lessons, setLessons] = useState<Lesson[]>([]);
-  const [moduleData, setModuleData] = useState<Module | null>(null);
+  const [moduleWithUserState, setModuleWithUserState] = useState<ModuleWithUserState | null>(null);
   const { skillModuleService } = useActorServices();
   const { 
     markLessonViewed, 
@@ -37,61 +38,71 @@ export function Academy() {
   } = useAcademyProgress();
 
   // Fetch module id=1 on component mount
-  useEffect(() => {
-    const fetchModule = async () => {
-      setIsLoadingModule(true);
-      try {
-        // TODO: Add error handling
-        const fetchedModule = await skillModuleService.getModule(1n);
+  const fetchModule = async () => {
+    setIsLoadingModule(true);
+    try {
+      const fetchedModuleWithState = await skillModuleService.getModule(1n);
+      
+      if (fetchedModuleWithState) {
+        // Store module with user state
+        setModuleWithUserState(fetchedModuleWithState);
         
-        if (fetchedModule) {
-          // Store module data for quiz access
-          setModuleData(fetchedModule);
-          
-          // Map Module lessons to component Lesson format
-          const mappedLessons = fetchedModule.lessons
-            .sort((a, b) => Number(a.order - b.order))
-            .map((lesson) => {
-              try {
-                // Parse JSON data from lesson.data
-                const lessonData = JSON.parse(lesson.data);
-                return {
-                  id: lesson.id.toString(),
-                  title: lessonData.title || '',
-                  subtitle: lessonData.subtitle || '',
-                  content: lessonData.content || '',
-                  icon: lessonData.icon ? (
-                    lessonData.icon.startsWith('/') ? (
-                      <Image src={lessonData.icon} alt={lessonData.title || ''} width={36} height={36} />
-                    ) : null
-                  ) : undefined,
-                };
-              } catch (error) {
-                // TODO: Add error handling for JSON parsing
-                console.error('Error parsing lesson data:', error);
-                return {
-                  id: lesson.id.toString(),
-                  title: 'Untitled Lesson',
-                  subtitle: '',
-                  content: '',
-                };
-              }
-            });
-          setLessons(mappedLessons);
-        }
-      } catch (error) {
-        // TODO: Add error handling
-        console.error('Error fetching module:', error);
-      } finally {
-        setIsLoadingModule(false);
+        // Extract module data from ModuleWithUserState
+        const moduleData = fetchedModuleWithState.moduleData;
+        
+        // Map Module lessons to component Lesson format
+        const mappedLessons = moduleData.lessons
+          .sort((a, b) => Number(a.order - b.order))
+          .map((lesson) => {
+            try {
+              // Parse JSON data from lesson.data
+              const lessonData = JSON.parse(lesson.data);
+              return {
+                id: lesson.id.toString(),
+                title: lessonData.title || '',
+                subtitle: lessonData.subtitle || '',
+                content: lessonData.content || '',
+                icon: lessonData.icon ? (
+                  lessonData.icon.startsWith('/') ? (
+                    <Image src={lessonData.icon} alt={lessonData.title || ''} width={36} height={36} />
+                  ) : null
+                ) : undefined,
+              };
+            } catch (error) {
+              console.error('Error parsing lesson data:', error);
+              return {
+                id: lesson.id.toString(),
+                title: 'Untitled Lesson',
+                subtitle: '',
+                content: '',
+              };
+            }
+          });
+        setLessons(mappedLessons);
       }
-    };
+    } catch (error) {
+      console.error('Error fetching module:', error);
+    } finally {
+      setIsLoadingModule(false);
+    }
+  };
 
+  useEffect(() => {
     fetchModule();
   }, [skillModuleService]);
 
+  // Handle module completion - refetch module state after quiz passes
+  const handleModuleCompleted = async () => {
+    await fetchModule();
+  };
+
   const progress = getProgress(lessons.length);
   const quizAccessible = canAccessQuiz(lessons.length);
+  
+  // Extract module data and completion state
+  const moduleData = moduleWithUserState?.moduleData ?? null;
+  const isModuleCompleted = moduleWithUserState?.isCompleted ?? false;
+  const completedAt = moduleWithUserState?.completedAt?.[0] ?? null;
   
   // Extract quiz ID from module data (use first quiz if multiple exist, default to quiz ID 1)
   const quizId = moduleData?.quizzes && moduleData.quizzes.length > 0 
@@ -154,14 +165,14 @@ export function Academy() {
   };
 
   return (
-    <div className="min-h-screen flex justify-center bg-background">
+    <div className="min-h-screen flex justify-center">
       {/* Show loading overlay while fetching module */}
       {isLoadingModule && <LoadingOverlay />}
       
       {/* App Container */}
-      <div className="w-full max-w-md min-h-screen relative overflow-hidden shadow-xl bg-card">
+      <div className="w-full max-w-md min-h-screen relative overflow-hidden shadow-xl">
         {/* Sticky Header */}
-        <header className="sticky top-0 z-10 backdrop-blur-md border-b border-border bg-card/80">
+        <header className="sticky top-0 z-10 backdrop-blur-md border-b border-border">
           <div className="h-14 flex items-center justify-center">
             <h1 className="text-lg font-bold uppercase tracking-wider text-foreground">
               BOB Academy
@@ -169,13 +180,20 @@ export function Academy() {
           </div>
         </header>
 
-        {/* Hero Section */}
-        <AcademyHero 
-          progress={progress} 
-          onStartJourney={handleStartJourney}
-          canAccessQuiz={quizAccessible}
-          onStartQuiz={handleStartQuiz}
-        />
+        {/* Hero Section - Hide if module completed */}
+        {!isModuleCompleted && (
+          <AcademyHero 
+            progress={progress} 
+            onStartJourney={handleStartJourney}
+            canAccessQuiz={quizAccessible}
+            onStartQuiz={handleStartQuiz}
+          />
+        )}
+
+        {/* Module Passed State - Show if module completed */}
+        {isModuleCompleted && (
+          <ModulePassedState completedAt={completedAt} />
+        )}
 
         {/* Lesson List */}
         <div className="px-6 pb-6">
@@ -249,6 +267,7 @@ export function Academy() {
           moduleId={moduleId}
           quizId={quizId}
           onReviewLessons={handleReviewLessons}
+          onModuleCompleted={handleModuleCompleted}
         />
       </div>
     </div>

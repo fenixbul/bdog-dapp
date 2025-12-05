@@ -77,6 +77,13 @@ module {
     order : Nat;
   };
 
+  // Module With User State Type (includes completion status)
+  public type ModuleWithUserState = {
+    moduleData : Module;
+    isCompleted : Bool;
+    completedAt : ?Time.Time;
+  };
+
   // Answer Submission Type
   public type AnswerSubmission = {
     questionId : QuestionId;

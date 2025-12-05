@@ -38,6 +38,11 @@
     --warning-foreground: 0 0% 9%;
     --cta: 158 100% 50%; /* #00ff9e - Primary green color */
     --cta-foreground: 0 0% 0%;
+    
+    /* Gradient colors for banners */
+    --dark-red: 8 78% 15%; /* #431405 - Dark red color used for vertical banner gradient top color. Applied in vertical banner containers that transition from dark red at the top to black at the bottom. */
+    --magenta: 310 60% 40%; /* #A72A99 - Magenta/pink color used for horizontal banner gradient left color. Applied in horizontal banners that transition from magenta on the left to blue on the right. */
+    --blue: 207 64% 58%; /* #4E9AD9 - Blue color used for horizontal banner gradient right color. Applied in horizontal banners that transition from magenta on the left to blue on the right. */
   }
 }
 
@@ -518,5 +523,14 @@
   }
   .scrollbar-hide::-webkit-scrollbar {
     display: none;
+  }
+  
+  /* Gradient utility classes */
+  .bg-gradient-horizontal {
+    background: linear-gradient(to right, hsl(var(--magenta)), hsl(var(--blue)));
+  }
+  
+  .bg-gradient-vertical {
+    background: linear-gradient(to bottom, hsl(var(--dark-red)) 0px, hsl(var(--background)) 150px);
   }
 }

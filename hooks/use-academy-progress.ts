@@ -3,7 +3,6 @@
 import { useState, useEffect, useCallback } from 'react';
 
 const STORAGE_KEY = 'academy-viewed-lessons';
-const QUIZ_COMPLETED_KEY = 'academy-quiz-completed';
 const QUIZ_ATTEMPTS_KEY = 'academy-quiz-attempts';
 const REWARD_CLAIMED_KEY = 'academy-reward-claimed';
 
@@ -35,32 +34,6 @@ function saveViewedLessons(viewedLessons: Set<string>): void {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(lessonIds));
   } catch (error) {
     console.error('Failed to save viewed lessons to localStorage:', error);
-  }
-}
-
-function loadQuizCompleted(): boolean {
-  if (typeof window === 'undefined') {
-    return false;
-  }
-
-  try {
-    const stored = localStorage.getItem(QUIZ_COMPLETED_KEY);
-    return stored === 'true';
-  } catch (error) {
-    console.error('Failed to load quiz completion from localStorage:', error);
-    return false;
-  }
-}
-
-function saveQuizCompleted(completed: boolean): void {
-  if (typeof window === 'undefined') {
-    return;
-  }
-
-  try {
-    localStorage.setItem(QUIZ_COMPLETED_KEY, String(completed));
-  } catch (error) {
-    console.error('Failed to save quiz completion to localStorage:', error);
   }
 }
 
@@ -118,14 +91,12 @@ function saveRewardClaimed(claimed: boolean): void {
 
 export function useAcademyProgress() {
   const [viewedLessons, setViewedLessons] = useState<Set<string>>(() => loadViewedLessons());
-  const [quizCompleted, setQuizCompleted] = useState<boolean>(() => loadQuizCompleted());
   const [quizAttempts, setQuizAttempts] = useState<number>(() => loadQuizAttempts());
   const [rewardClaimed, setRewardClaimed] = useState<boolean>(() => loadRewardClaimed());
 
   // Sync with localStorage on mount
   useEffect(() => {
     setViewedLessons(loadViewedLessons());
-    setQuizCompleted(loadQuizCompleted());
     setQuizAttempts(loadQuizAttempts());
     setRewardClaimed(loadRewardClaimed());
   }, []);
@@ -158,15 +129,6 @@ export function useAcademyProgress() {
     saveViewedLessons(emptySet);
   };
 
-  const markQuizCompleted = useCallback(() => {
-    setQuizCompleted(true);
-    saveQuizCompleted(true);
-  }, []);
-
-  const isQuizCompleted = useCallback((): boolean => {
-    return quizCompleted;
-  }, [quizCompleted]);
-
   const areAllLessonsViewed = useCallback((totalLessons: number): boolean => {
     return viewedLessons.size === totalLessons && totalLessons > 0;
   }, [viewedLessons.size]);
@@ -198,9 +160,6 @@ export function useAcademyProgress() {
     isLessonViewed,
     getProgress,
     resetProgress,
-    quizCompleted,
-    markQuizCompleted,
-    isQuizCompleted,
     areAllLessonsViewed,
     canAccessQuiz,
     quizAttempts,

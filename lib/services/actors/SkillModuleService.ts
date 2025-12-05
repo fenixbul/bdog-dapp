@@ -5,6 +5,7 @@ import type {
   Module,
   ModuleId,
   ModuleInput,
+  ModuleWithUserState,
   Quiz,
   QuizId,
   QuizAttempt,
@@ -25,11 +26,11 @@ export class SkillModuleService extends ActorBaseService<SkillModuleServiceType>
   protected idlFactory = idlFactory;
 
   /**
-   * Get a module by ID.
+   * Get a module by ID with user completion state.
    * @param moduleId - The ID of the module to retrieve
-   * @returns The module if found, null otherwise
+   * @returns The module with user state if found, null otherwise
    */
-  async getModule(moduleId: ModuleId): Promise<Module | null> {
+  async getModule(moduleId: ModuleId): Promise<ModuleWithUserState | null> {
     try {
       const actor = await this.getActor();
       const result = await actor.get_module(moduleId);
@@ -39,6 +40,23 @@ export class SkillModuleService extends ActorBaseService<SkillModuleServiceType>
       console.error(`Error getting module ${moduleId}:`, errorMessage);
       throw new Error(`Failed to get module: ${errorMessage}`);
     }
+  }
+
+  /**
+   * Mark a module as completed for the current user.
+   * @param moduleId - The ID of the module to mark as completed
+   */
+  async markModuleCompleted(moduleId: ModuleId): Promise<void> {
+    return this.callCanister(
+      async () => {
+        const actor = await this.getActor();
+        const result = await actor.mark_module_completed(moduleId);
+        if ('err' in result) {
+          throw new Error(result.err);
+        }
+      },
+      "mark module completed"
+    );
   }
 
   /**
