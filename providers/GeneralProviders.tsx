@@ -5,6 +5,7 @@ import { TooltipProvider } from '@/components/ui';
 import { AuthProvider } from '@/providers/AuthProvider';
 import { TokenDataProvider } from '@/providers/TokenDataProvider';
 import { ActorServiceProvider } from '@/providers/ActorServiceProvider';
+import { PlayerProvider } from '@/providers/PlayerProvider';
 import { ResourcePreloader } from '@/components/ResourcePreloader';
 
 interface GeneralProvidersProps {
@@ -16,10 +17,12 @@ export function GeneralProviders({ children }: GeneralProvidersProps) {
     <TooltipProvider>
       <AuthProvider>
         <ActorServiceProvider>
-          <TokenDataProvider>
-            <ResourcePreloader />
-            {children}
-          </TokenDataProvider>
+          <PlayerProvider>
+            <TokenDataProvider>
+              <ResourcePreloader />
+              {children}
+            </TokenDataProvider>
+          </PlayerProvider>
         </ActorServiceProvider>
       </AuthProvider>
     </TooltipProvider>

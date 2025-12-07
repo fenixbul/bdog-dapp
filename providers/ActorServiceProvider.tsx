@@ -4,6 +4,7 @@ import { createContext, useContext, useEffect, useState, type ReactNode } from '
 import { Actor } from '@dfinity/agent';
 import { useAuthStore } from '@/store/auth-store';
 import { SkillModuleService } from '@/lib/services/actors/SkillModuleService';
+import { PlayerService } from '@/lib/services/actors/PlayerService';
 import type { ActorBaseService } from '@/lib/services/actors/ActorBaseService';
 
 /**
@@ -12,8 +13,8 @@ import type { ActorBaseService } from '@/lib/services/actors/ActorBaseService';
  */
 interface ActorServices {
   skillModuleService: SkillModuleService;
+  playerService: PlayerService;
   // Future services can be added here:
-  // playerService: PlayerService;
   // gameService: GameService;
 }
 
@@ -42,6 +43,7 @@ export function ActorServiceProvider({ children }: ActorServiceProviderProps) {
   // Create service instances (singletons)
   const [services] = useState<ActorServices>(() => ({
     skillModuleService: new SkillModuleService(),
+    playerService: new PlayerService(),
     // Future services initialized here
   }));
 
@@ -57,6 +59,7 @@ export function ActorServiceProvider({ children }: ActorServiceProviderProps) {
       // Collect all services that extend ActorBaseService
       const serviceInstances: ActorBaseService<any>[] = [
         services.skillModuleService,
+        services.playerService,
         // Add future services here
       ];
 

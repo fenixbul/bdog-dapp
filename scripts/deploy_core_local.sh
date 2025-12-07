@@ -1,12 +1,26 @@
 #!/bin/bash
 
-# Local ICP Deployment Script
-# Purpose: Deploy canisters to local DFX replica for development
-# Usage: ./deploy_local.sh
+# ⚠️  DEPRECATED: This script is deprecated and should not be used.
+# 
+# Please use individual deployment scripts instead. See scripts/README.md for
+# the step-by-step setup guide:
+#   1. ./scripts/restart_dfx.sh
+#   2. ./scripts/deploy/players_deploy.sh
+#   3. ./scripts/deploy/icrc_deploy.sh
+#   4. ./scripts/deploy/skill_module_deploy.sh + ./scripts/tools/seed_bob_module.sh
+#   5. ./scripts/deploy/rewards_deploy.sh
+#
+# This file is kept for reference only and may be removed in a future version.
+
+# Local ICP Core Deployment Script
+# Purpose: Deploy core canisters to local DFX replica for development
+# Usage: ./scripts/deploy_core_local.sh
+# This script orchestrates deployment by calling fragment scripts
+# Note: Game canisters (lobbies, games) are deployed separately via game_deploy.sh
 
 set -e  # Exit on any error
 
-echo "🚀 Starting local ICP deployment..."
+echo "🚀 Starting local ICP core deployment..."
 
 # Colors for better output readability
 GREEN='\033[0;32m'
@@ -46,15 +60,9 @@ if dfx ping &> /dev/null; then
     print_warning "DFX replica is already running"
 else
     print_status "Starting DFX local replica..."
-    # Start DFX in background with clean state
-    # --clean: Fresh state (removes previous data)
-    # --background: Run in background, don't block terminal
     dfx start --clean --background
-    
-    # Wait a moment for replica to fully start
     sleep 3
     
-    # Verify it started successfully
     if dfx ping &> /dev/null; then
         print_status "DFX replica started successfully"
     else
@@ -63,95 +71,39 @@ else
     fi
 fi
 
-# Clean build artifacts for fresh build
-print_status "Cleaning build artifacts..."
-if [ -d ".next" ]; then
-    rm -rf .next
-    print_status "✓ Removed .next folder"
-fi
-
-if [ -d "out" ]; then
-    rm -rf out
-    print_status "✓ Removed out folder"
-fi
-
-if [ -d ".dfx" ]; then
-    print_warning "Cleaning .dfx build artifacts..."
-    rm -rf .dfx/local/canisters/*
-    print_status "✓ Cleaned canister build artifacts"
-fi
-
-# Create all canisters
-print_status "Creating all canisters..."
-if dfx canister create --all; then
-    print_status "All canisters created successfully"
-else
-    print_error "Failed to create all canisters"
-    exit 1
-fi
-
-# Build Motoko canisters
-print_status "Building Motoko canisters..."
-
-# Define canisters in build order (dependencies first)
-MOTOKO_CANISTERS=(
-    "players"
-    "lobbies"
-    "games"
-    "skill_module"
-)
-
-for canister in "${MOTOKO_CANISTERS[@]}"; do
-    print_status "Building $canister canister..."
-    if dfx build "$canister"; then
-        print_status "$canister built successfully"
-    else
-        print_error "Failed to build $canister"
-        exit 1
-    fi
-done
-
-# Generate TypeScript declarations for frontend integration
-# Only generate for Motoko canisters (skip asset canisters like site, site_preprod)
-print_status "Generating canister declarations..."
-for canister in "${MOTOKO_CANISTERS[@]}"; do
-    print_status "Generating declarations for $canister..."
-    if dfx generate "$canister"; then
-        print_status "$canister declarations generated successfully"
-    else
-        print_error "Failed to generate declarations for $canister"
-        exit 1
-    fi
-done
-print_status "All declarations generated successfully"
-
-# Deploy canisters in dependency order
-print_status "Deploying canisters..."
-echo "📦 This will deploy:"
-for canister in "${MOTOKO_CANISTERS[@]}"; do
-    echo "   - $canister"
-done
+# Deploy canisters using fragment scripts
+print_status "Deploying core canisters using fragment scripts..."
 echo ""
 
-# Deploy each canister
-for canister in "${MOTOKO_CANISTERS[@]}"; do
-    print_status "Deploying $canister canister..."
-    if dfx deploy "$canister" -m reinstall --yes; then
-        print_status "$canister deployed successfully"
-    else
-        print_error "Failed to deploy $canister"
-        exit 1
-    fi
-done
+# Deploy players canisters
+print_info "Step 1/4: Deploying players canisters..."
+if ./scripts/deploy/players_deploy.sh; then
+    print_status "Players canisters deployed successfully"
+else
+    print_error "Failed to deploy players canisters"
+    exit 1
+fi
+echo ""
+
+# Deploy skill module canisters
+print_info "Step 2/4: Deploying skill module canisters..."
+if ./scripts/deploy/skill_module_deploy.sh; then
+    print_status "Skill module canisters deployed successfully"
+else
+    print_error "Failed to deploy skill module canisters"
+    exit 1
+fi
+echo ""
 
 # Deploy ICRC Token Ledgers (Local Development Only)
-print_status "Deploying ICRC token ledgers for local development..."
-if ./scripts/deploy_icrc_tokens.sh; then
+print_info "Step 3/4: Deploying ICRC token ledgers..."
+if ./scripts/deploy/icrc_deploy.sh; then
     print_status "All ICRC tokens deployed successfully"
 else
     print_error "Failed to deploy ICRC tokens"
     exit 1
 fi
+echo ""
 
 # Deploy Internet Identity
 print_status "Deploying internet_identity canister..."
@@ -161,18 +113,20 @@ else
     print_error "Failed to deploy internet_identity"
     exit 1
 fi
+echo ""
 
 # Set up authorization relationships
-print_status "Setting up authorization relationships..."
-if [ -f "./setup-authorizations.sh" ]; then
-    if ./setup-authorizations.sh; then
+print_info "Step 4/4: Setting up authorization relationships..."
+if [ -f "./scripts/setup-authorizations.sh" ]; then
+    if ./scripts/setup-authorizations.sh; then
         print_status "Authorization relationships set up successfully"
     else
         print_warning "Authorization setup script failed or returned non-zero (may be expected)"
     fi
 else
-    print_warning "setup-authorizations.sh not found, skipping authorization setup"
+    print_warning "scripts/setup-authorizations.sh not found, skipping authorization setup"
 fi
+echo ""
 
 # Build frontend (Next.js)
 print_status "Building frontend..."
@@ -198,11 +152,11 @@ else
     print_warning "Failed to deploy site (may not be configured)"
 fi
 
-print_status "All canisters deployed successfully"
+print_status "All core canisters deployed successfully"
 
 # Show deployed canister URLs for easy access
 echo ""
-echo "🎉 Deployment complete!"
+echo "🎉 Core deployment complete!"
 echo ""
 echo "🌐 Access your application:"
 SITE_ID=$(dfx canister id site 2>/dev/null || echo "not deployed")
@@ -212,8 +166,9 @@ if [ "$SITE_ID" != "not deployed" ]; then
 fi
 
 echo ""
-echo "📦 Deployed canisters:"
-for canister in "${MOTOKO_CANISTERS[@]}"; do
+echo "📦 Deployed core canisters:"
+CORE_CANISTERS=("players" "skill_module")
+for canister in "${CORE_CANISTERS[@]}"; do
     CANISTER_ID=$(dfx canister id "$canister" 2>/dev/null || echo "not found")
     echo "   $canister: $CANISTER_ID"
     echo "      Candid UI: http://localhost:8080/?canisterId=$CANISTER_ID"
@@ -235,11 +190,14 @@ echo "      Candid UI: http://localhost:8080/?canisterId=$BDOG_CANISTER_ID"
 
 echo ""
 echo "🔐 Authorization relationships:"
-print_info "Run ./setup-authorizations.sh to view or update authorizations"
+print_info "Run ./scripts/setup-authorizations.sh to view or update authorizations"
 
 echo ""
-print_status "Ready for development! 🚀"
+print_status "Core deployment ready! 🚀"
 echo ""
-print_info "Quick test: ./canisters/scripts/interactive_game_tool.sh"
-print_info "Skill Module test: ./canisters/scripts/interactive_skill_module_tool.sh"
+print_info "To deploy game canisters separately, run: ./scripts/deploy/game_deploy.sh"
+print_info "Quick test: ./scripts/tools/interactive_game_tool.sh"
+print_info "Skill Module test: ./scripts/tools/interactive_skill_module_tool.sh"
+echo ""
+
 

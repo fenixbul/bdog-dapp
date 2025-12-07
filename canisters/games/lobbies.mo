@@ -2,14 +2,14 @@ import Map "mo:map/Map";
 import { phash } "mo:map/Map";
 import { nhash } "mo:map/Map";
 import Result "mo:base/Result";
-import accessControl "modules/accessControl";
+import accessControl "../modules/accessControl";
 import Iter "mo:base/Iter";
 import Time "mo:base/Time";
 import Principal "mo:base/Principal";
 import Text "mo:base/Text";
 import Buffer "mo:base/Buffer";
-import Lobby "types/lobby";
-import shared_types "types/shared_types";
+import Lobby "../types/lobby";
+import shared_types "../types/shared_types";
 
 shared ({ caller = initializer }) persistent actor class Lobbies() = this {
   let authorizedPrincipals = Map.new<Principal, ()>();

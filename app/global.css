@@ -530,6 +530,29 @@
     background: linear-gradient(to right, hsl(var(--magenta)), hsl(var(--blue)));
   }
   
+  .bg-gradient-horizontal-animated {
+    background: linear-gradient(
+      90deg,
+      hsl(var(--blue)) 0%,
+      hsl(var(--magenta)) 50%,
+      hsl(var(--blue)) 100%
+    );
+    background-size: 200% 100%;
+    animation: gradient-shift 3s ease infinite;
+  }
+  
+  @keyframes gradient-shift {
+    0% {
+      background-position: 0% 50%;
+    }
+    50% {
+      background-position: 100% 50%;
+    }
+    100% {
+      background-position: 0% 50%;
+    }
+  }
+  
   .bg-gradient-vertical {
     background: linear-gradient(to bottom, hsl(var(--dark-red)) 0px, hsl(var(--background)) 150px);
   }

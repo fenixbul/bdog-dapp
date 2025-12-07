@@ -88,7 +88,7 @@ export default function LandingPage() {
                   target="_blank" 
                   rel="noopener noreferrer"
                   className="  transition-colors inline-flex items-center gap-1"
-                  aria-label="Follow BDOG on Twitter"
+                  aria-label="Follow BDOG on X"
                 >
                   <Image 
                     src="/images/X.png" 
@@ -167,7 +167,7 @@ export default function LandingPage() {
                 target="_blank" 
                 rel="noopener noreferrer"
                 className="text-gray-400 transition-colors inline-flex items-center gap-1"
-                aria-label="Follow BDOG on Twitter"
+                aria-label="Follow BDOG on X"
               >
                 <Image 
                   src="/images/X.png" 

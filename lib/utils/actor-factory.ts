@@ -8,6 +8,7 @@ import type { IDL } from "@dfinity/candid";
  */
 const CANISTER_IDS = {
   skill_module: process.env.NEXT_PUBLIC_SKILL_MODULE_CANISTER_ID,
+  player_manager: process.env.NEXT_PUBLIC_PLAYER_MANAGER_CANISTER_ID,
 } as const;
 
 /**

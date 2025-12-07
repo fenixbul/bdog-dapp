@@ -4,7 +4,15 @@
             "main": "canisters/players.mo",
             "type": "motoko",
             "declarations": {
-                "output": "lib/canisters/players"
+                "output": "canisters/declarations/players"
+            }
+        },
+        "player_manager": {
+            "main": "canisters/player_manager.mo",
+            "type": "motoko",
+            "dependencies": ["players", "verification"],
+            "declarations": {
+                "output": "lib/canisters/player_manager"
             }
         },
         "lobbies": {
@@ -15,7 +23,7 @@
             }
         },
         "games": {
-            "main": "canisters/games.mo",
+            "main": "canisters/games/games.mo",
             "type": "motoko",
             "declarations": {
                 "output": "lib/canisters/games"
@@ -26,6 +34,20 @@
             "type": "motoko",
             "declarations": {
                 "output": "lib/canisters/skill_module"
+            }
+        },
+        "treasury": {
+            "main": "canisters/treasury.mo",
+            "type": "motoko",
+            "declarations": {
+                "output": "lib/canisters/treasury"
+            }
+        },
+        "rewards": {
+            "main": "canisters/rewards.mo",
+            "type": "motoko",
+            "declarations": {
+                "output": "lib/canisters/rewards"
             }
         },
         "site": {
@@ -87,6 +109,14 @@
                     "ic": "2qqix-tiaaa-aaaam-qeria-cai"
                 }
             }
+        },
+        "verification": {
+            "type": "custom",
+            "declarations": {
+                "output": "canisters/declarations/verification"
+            },
+            "candid": "canisters/modules/verification.did",
+            "wasm": "canisters/modules/verification.wasm"
         }
     },
     "defaults": {

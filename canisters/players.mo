@@ -35,8 +35,8 @@ shared ({ caller = initializer }) persistent actor class Players() = this {
       created_at = Time.now();
       last_action_at = Time.now();
       refferer_pid = refferer_pid;
-      twitter_username = null;
-      is_twitter_verified = false;
+      is_x_verified = false;
+      x_data = null;
       gamesPlayed = 0;
       gamesWon = 0;
     };
@@ -45,9 +45,14 @@ shared ({ caller = initializer }) persistent actor class Players() = this {
     return #ok(player);
   };
 
-  // Get player by caller pid
-  public shared query (msg) func get_player() : async Result.Result<Player.Player, Text> {
-    let player = Map.get(players, phash, msg.caller);
+  // Get player by player id
+  public shared query (msg) func get_player_by_principal(player_id : Principal) : async Result.Result<Player.Player, Text> {
+    // Check if caller is authorized
+    if (not accessControl.isAuthorized(msg.caller, authorizedPrincipals)) {
+      return #err("Caller does not have permission to get player");
+    };
+
+    let player = Map.get(players, phash, player_id);
     switch (player) {
       case (null) {
         return #err("Player not found");
@@ -92,6 +97,47 @@ shared ({ caller = initializer }) persistent actor class Players() = this {
           player_id,
           {
             player with last_action_at = Time.now();
+          },
+        );
+        return #ok();
+      };
+    };
+  };
+
+  // Update player X verification data
+  public shared (msg) func update_player_x_verification(
+    player_id : Principal,
+    username : Text,
+    avatar : Text,
+    created_at : Text,
+    verified_at : Int,
+  ) : async Result.Result<(), Text> {
+    // Check if caller is authorized
+    if (not accessControl.isAuthorized(msg.caller, authorizedPrincipals)) {
+      return #err("Caller does not have permission to update player X verification");
+    };
+
+    let player = Map.get(players, phash, player_id);
+
+    switch (player) {
+      case (null) {
+        return #err("Player not found");
+      };
+      case (?player) {
+        let x_data : Player.XData = {
+          username = username;
+          avatar = avatar;
+          created_at = created_at;
+          verified_at = verified_at;
+        };
+        Map.set(
+          players,
+          phash,
+          player_id,
+          {
+            player with
+            is_x_verified = true;
+            x_data = ?x_data;
           },
         );
         return #ok();

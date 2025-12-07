@@ -12,7 +12,7 @@ interface AuthProviderProps {
 
 // Protected routes that require authentication
 // TODO: Good to have in future - make this configurable or load from config
-const PROTECTED_ROUTES = ['/wallet'];
+const PROTECTED_ROUTES = ['/wallet', '/profile'];
 
 export function AuthProvider({ children }: AuthProviderProps) {
   const { sync, isInitialized, isAuthenticated, showConnectModal, closeConnectModal } = useAuthStore();

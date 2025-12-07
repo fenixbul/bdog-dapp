@@ -2,11 +2,11 @@ import TrieMap "mo:base/TrieMap";
 import Map "mo:map/Map";
 import { phash } "mo:map/Map";
 import Result "mo:base/Result";
-import accessControl "modules/accessControl";
+import accessControl "../modules/accessControl";
 import Iter "mo:base/Iter";
 import Nat32 "mo:base/Nat32";
-import Game "types/game";
-import shared_types "types/shared_types";
+import Game "../types/game";
+import shared_types "../types/shared_types";
 
 shared ({ caller = initializer }) persistent actor class Games() = this {
   let authorizedPrincipals = Map.new<Principal, ()>();

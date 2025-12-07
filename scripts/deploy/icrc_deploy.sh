@@ -103,7 +103,7 @@ deploy_token() {
   echo "🪙 Deploying $TOKEN_NAME token with symbol $TOKEN_SYMBOL..."
   echo "   Initial supply: $INITIAL_SUPPLY atomic units"
   
-  dfx deploy "$TOKEN_SYMBOL" --mode reinstall --specified-id "$CANISTER_ID" --argument "
+  dfx deploy "$TOKEN_SYMBOL" --mode reinstall --yes --specified-id "$CANISTER_ID" --argument "
     (variant {
       Init = record {
         token_name = \"${TOKEN_NAME}\";
@@ -157,13 +157,25 @@ if [[ $# -gt 0 ]]; then
   fi
 fi
 
-# Store the original identity
+# Store the original identity at the start
 ORIGINAL_IDENTITY=$(dfx identity whoami)
 OWNER=$(dfx identity get-principal)
 
 echo "👤 Original identity: $ORIGINAL_IDENTITY"
 echo "🔑 Using current identity principal: $OWNER"
 INITIAL_BALANCE_OWNER="$OWNER"
+
+# Function to revert to original identity (called on exit)
+revert_identity() {
+  if [ -n "$ORIGINAL_IDENTITY" ]; then
+    echo ""
+    echo "🔄 Reverting to original identity: $ORIGINAL_IDENTITY"
+    dfx identity use "$ORIGINAL_IDENTITY" 2>/dev/null || true
+  fi
+}
+
+# Set trap to ensure identity is reverted on script exit (success or failure)
+trap revert_identity EXIT
 
 # Create and use minter identity if it doesn't exist
 if ! dfx identity list | grep -q "token_minter"; then
@@ -205,5 +217,9 @@ else
   deploy_token "$TOKEN_NAME" "$TOKEN_SYMBOL" "$CANISTER_ID" "$INITIAL_BALANCE_OWNER" "$MINTER" "$INITIAL_SUPPLY"
 fi
 
-# Switch back to original identity
-dfx identity use "$ORIGINAL_IDENTITY"
+# Explicitly revert identity before exit (trap will also handle this, but this ensures clean output)
+revert_identity
+
+# Remove trap since we've explicitly reverted
+trap - EXIT
+
