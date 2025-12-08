@@ -145,14 +145,16 @@ export function XVerificationModal({
     <Dialog open={isOpen} onOpenChange={handleDialogChange}>
       <DialogContent className="max-w-md w-[calc(100%-2rem)] p-0 border-0 md:border md:border-[#1a1a1a] bg-background rounded-none">
         <div className="p-6 space-y-6">
-          <DialogHeader>
-            <DialogTitle className="text-xl font-bold  uppercase tracking-wider">
-              Account Verification
-            </DialogTitle>
-            <DialogDescription className="text-sm text-foreground pt-2">
-              Make a post on X and copy its link to complete the process.
-            </DialogDescription>
-          </DialogHeader>
+          {!isSuccess && (
+            <DialogHeader>
+              <DialogTitle className="text-xl font-bold  uppercase tracking-wider">
+                Account Verification
+              </DialogTitle>
+              <DialogDescription className="text-sm text-foreground pt-2">
+                Make a post on X and copy its link to complete the process.
+              </DialogDescription>
+            </DialogHeader>
+          )}
 
           {isSuccess ? (
             // Success Screen

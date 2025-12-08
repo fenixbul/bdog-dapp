@@ -34,6 +34,12 @@ export function LessonModal({
   const isLastLesson = currentIndex === lessons.length - 1;
   const isFirstLesson = currentIndex === 0;
 
+  // Handle start quiz - close modal and start quiz
+  const handleStartQuiz = () => {
+    onClose();
+    onStartQuiz?.();
+  };
+
   // Mark lesson as viewed when modal opens
   useEffect(() => {
     if (isOpen) {
@@ -146,7 +152,7 @@ export function LessonModal({
                   <button
                     onClick={
                       isLastLesson && canAccessQuiz && onStartQuiz
-                        ? onStartQuiz
+                        ? handleStartQuiz
                         : onNextLesson
                     }
                     className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-primary text-primary-foreground rounded-lg hover:opacity-90 transition-opacity font-medium"

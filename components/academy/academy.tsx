@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { LessonCard } from './LessonCard';
 import { LessonModal } from './LessonModal';
@@ -9,6 +9,7 @@ import { Quiz } from './Quiz';
 import { ModulePassedState } from './ModulePassedState';
 import { useAcademyProgress } from '@/hooks/use-academy-progress';
 import { useActorServices } from '@/providers/ActorServiceProvider';
+import { useAuthStore } from '@/store/auth-store';
 import { LoadingOverlay } from '@/components/layout/LoadingOverlay';
 import type { ModuleWithUserState } from '@/lib/canisters/skill_module/skill_module.did';
 import Image from 'next/image';
@@ -28,7 +29,12 @@ export function Academy() {
   const [isLoadingModule, setIsLoadingModule] = useState(true);
   const [lessons, setLessons] = useState<Lesson[]>([]);
   const [moduleWithUserState, setModuleWithUserState] = useState<ModuleWithUserState | null>(null);
-  const { skillModuleService } = useActorServices();
+  const { skillModuleService, isIdentityReplaced } = useActorServices();
+  const { 
+    isInitialized, 
+    isAuthenticated, 
+    openConnectModal 
+  } = useAuthStore();
   const { 
     markLessonViewed, 
     isLessonViewed, 
@@ -38,7 +44,24 @@ export function Academy() {
   } = useAcademyProgress();
 
   // Fetch module id=1 on component mount
-  const fetchModule = async () => {
+  const fetchModule = useCallback(async () => {
+    // Wait for auth initialization
+    if (!isInitialized) {
+      return;
+    }
+
+    // If not authenticated, open connect modal
+    if (!isAuthenticated) {
+      openConnectModal();
+      setIsLoadingModule(false);
+      return;
+    }
+
+    // If authenticated, wait for identity replacement
+    if (!isIdentityReplaced) {
+      return;
+    }
+
     setIsLoadingModule(true);
     try {
       const fetchedModuleWithState = await skillModuleService.getModule(1n);
@@ -85,11 +108,12 @@ export function Academy() {
     } finally {
       setIsLoadingModule(false);
     }
-  };
+  }, [isInitialized, isAuthenticated, isIdentityReplaced, skillModuleService, openConnectModal]);
 
+  // Watch for auth initialization and identity replacement, then fetch module
   useEffect(() => {
     fetchModule();
-  }, [skillModuleService]);
+  }, [fetchModule]);
 
   // Handle module completion - refetch module state after quiz passes
   const handleModuleCompleted = async () => {

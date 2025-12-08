@@ -6,7 +6,7 @@
 set -e
 
 SKILL_MODULE_CANISTER="skill_module"
-NETWORK="local"
+NETWORK="${NETWORK:-local}"
 
 # Build lessons array
 lessons_array='vec {

@@ -49,7 +49,6 @@ export function ProfileCard() {
   const handleVerificationComplete = async () => {
     // Refetch player data to get updated verification status
     await refetch();
-    setShowVerificationModal(false);
   };
 
   return (

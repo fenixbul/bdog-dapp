@@ -6,7 +6,6 @@ import { X, Clock, CheckCircle2, Loader2 } from 'lucide-react';
 import { type QuizQuestion } from './quizData';
 import { useQuizState } from '@/hooks/use-quiz-state';
 import { QuizResults } from './QuizResults';
-import { useAcademyProgress } from '@/hooks/use-academy-progress';
 import { useActorServices } from '@/providers/ActorServiceProvider';
 import { useToast } from '@/hooks/use-toast';
 import { formatDuration } from '@/lib/utils';
@@ -81,7 +80,7 @@ export function Quiz({
   const timerIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const timeRef = useRef(timeRemaining);
   const submitStartTimeRef = useRef<number | null>(null);
-  const { isRewardClaimed, markRewardClaimed } = useAcademyProgress();
+  const lastAnswerRef = useRef<{ questionIndex: number; answerIndex: number } | null>(null);
 
   // Transform backend QuizWithoutAnswers to frontend QuizQuestion format
   const transformBackendQuiz = (backendQuiz: QuizWithoutAnswers): QuizQuestion[] => {
@@ -101,7 +100,12 @@ export function Quiz({
     
     // Ensure we have answers for all questions
     return quizData.map((question, index) => {
-      const answer = selectedAnswers[index];
+      // Check if this is the last question and we have a ref value
+      let answer = selectedAnswers[index];
+      if (lastAnswerRef.current && lastAnswerRef.current.questionIndex === index) {
+        answer = lastAnswerRef.current.answerIndex;
+      }
+      
       // If no answer selected, use 0 as default (backend will mark as incorrect)
       const answerIndex = answer !== null ? answer : 0;
       
@@ -256,6 +260,11 @@ export function Quiz({
   const handleAnswerSelect = (answerIndex: number) => {
     selectAnswer(currentQuestionIndex, answerIndex);
     
+    // Store the last answer in ref to ensure it's available during submit
+    if (isLastQuestion) {
+      lastAnswerRef.current = { questionIndex: currentQuestionIndex, answerIndex };
+    }
+    
     // Auto-submit on last question after ensuring state is updated
     setTimeout(() => {
       if (isLastQuestion) {
@@ -280,13 +289,11 @@ export function Quiz({
         throw new Error('Quiz data not available');
       }
       
-      // Validate we have answers array matching quiz questions
-      if (selectedAnswers.length !== quizData.length) {
-        throw new Error('Answer count mismatch');
-      }
-      
       // Transform answers to backend format (includes all questions)
       const answers = transformAnswers();
+      
+      // Clear the ref after using it
+      lastAnswerRef.current = null;
       
       // Validate answers array matches quiz questions count
       if (answers.length !== quizData.length) {
@@ -332,6 +339,8 @@ export function Quiz({
         }
       }, remaining);
     } catch (error) {
+      // Clear ref on error too
+      lastAnswerRef.current = null;
       setIsSubmitting(false);
       submitStartTimeRef.current = null;
       setSubmitError(error instanceof Error ? error.message : 'Failed to submit quiz');
@@ -347,6 +356,7 @@ export function Quiz({
     setQuizError(null);
     setQuizStartedAt(null);
     setTimeLimitNanos(null);
+    lastAnswerRef.current = null; // Clear ref on close
     submitStartTimeRef.current = null;
     if (timerIntervalRef.current) {
       clearInterval(timerIntervalRef.current);
@@ -364,6 +374,7 @@ export function Quiz({
     setQuizError(null);
     setQuizStartedAt(null);
     setTimeLimitNanos(null);
+    lastAnswerRef.current = null; // Clear ref on retry
     submitStartTimeRef.current = null;
     // Quiz will be refetched when isOpen is true and quizData is null
   };
@@ -379,16 +390,6 @@ export function Quiz({
     handleClose();
   };
 
-  const handleClaimReward = async () => {
-    try {
-      // Placeholder for actual reward claiming logic
-      // In future: integrate with token service/wallet
-      await new Promise(resolve => setTimeout(resolve, 1500)); // Simulate API call
-      markRewardClaimed();
-    } catch (error) {
-      throw error; // Let QuizResults handle the error
-    }
-  };
 
 
   // Show loading state while fetching quiz
@@ -596,8 +597,6 @@ export function Quiz({
               onTryAgain={handleTryAgain}
               onReviewLessons={handleReviewLessons}
               onBackToAcademy={handleBackToAcademy}
-              onClaimReward={handleClaimReward}
-              isRewardClaimed={isRewardClaimed()}
             />
           </>
         )}
@@ -705,7 +704,7 @@ export function Quiz({
 
                     return (
                       <button
-                        key={index}
+                        key={`${currentQuestionIndex}-${index}`}  // Add question index to key
                         onClick={() => handleAnswerSelect(index)}
                         className={`w-full text-left p-4 rounded-lg border-2 transition-all ${
                           isSelected

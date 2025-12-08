@@ -11,11 +11,18 @@ import type { ActorBaseService } from '@/lib/services/actors/ActorBaseService';
  * Service instances available through the context.
  * Add new services here as they are created.
  */
-interface ActorServices {
+interface ServiceInstances {
   skillModuleService: SkillModuleService;
   playerService: PlayerService;
   // Future services can be added here:
   // gameService: GameService;
+}
+
+/**
+ * Full actor services interface including identity replacement status.
+ */
+interface ActorServices extends ServiceInstances {
+  isIdentityReplaced: boolean;
 }
 
 /**
@@ -41,7 +48,7 @@ export function ActorServiceProvider({ children }: ActorServiceProviderProps) {
   const [isIdentityReplaced, setIsIdentityReplaced] = useState(false);
 
   // Create service instances (singletons)
-  const [services] = useState<ActorServices>(() => ({
+  const [services] = useState<ServiceInstances>(() => ({
     skillModuleService: new SkillModuleService(),
     playerService: new PlayerService(),
     // Future services initialized here
@@ -90,9 +97,10 @@ export function ActorServiceProvider({ children }: ActorServiceProviderProps) {
   /**
    * Watch for identity changes and replace identity on all actors.
    * Only replaces identity once per authentication session.
+   * Only runs when authenticated.
    */
   useEffect(() => {
-    if (!identity || !isAuthenticated || isIdentityReplaced) {
+    if (!isAuthenticated || !identity || isIdentityReplaced) {
       return;
     }
 
@@ -109,7 +117,7 @@ export function ActorServiceProvider({ children }: ActorServiceProviderProps) {
   }, [isAuthenticated, identity]);
 
   return (
-    <ActorServiceContext.Provider value={services}>
+    <ActorServiceContext.Provider value={{ ...services, isIdentityReplaced }}>
       {children}
     </ActorServiceContext.Provider>
   );

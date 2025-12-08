@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { ChevronRight, UserCircle, Gift, Wallet, Home, GraduationCap } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
+import { useRewardsStore } from "@/store/rewards-store";
 
 /**
  * Account Bottom Tab Bar (Mobile Only)
@@ -39,8 +40,10 @@ export function AccountBottomTab({
   const pathname = usePathname();
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [showScrollIndicator, setShowScrollIndicator] = useState(false);
+  const { getUnclaimedCount } = useRewardsStore();
 
   const currentPath = activePath || pathname;
+  const unclaimedCount = getUnclaimedCount();
 
   const isActive = (href: string) => {
     if (href === "/") {
@@ -136,6 +139,11 @@ export function AccountBottomTab({
                     >
                       <div className="relative flex items-center justify-center">
                         <Icon className="w-5 h-5 flex-shrink-0" />
+                        {item.href === "/rewards" && unclaimedCount > 0 && (
+                          <span className="absolute -top-2 -right-2 w-4 h-4 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center animate-pulse">
+                            {unclaimedCount}
+                          </span>
+                        )}
                       </div>
                       <span className="text-xs font-medium text-center leading-tight whitespace-nowrap">
                         {item.label}
