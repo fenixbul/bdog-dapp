@@ -1,10 +1,13 @@
 import Map "mo:map/Map";
 import { phash } "mo:map/Map";
+import TrieMap "mo:base/TrieMap";
+import Text "mo:base/Text";
 import Player "types/player";
 import Time "mo:base/Time";
 import Result "mo:base/Result";
 import accessControl "modules/accessControl";
 import Iter "mo:base/Iter";
+import Principal "mo:base/Principal";
 
 shared ({ caller = initializer }) persistent actor class Players() = this {
   // Configuration constants
@@ -13,6 +16,25 @@ shared ({ caller = initializer }) persistent actor class Players() = this {
   private var playersCount : Nat = INITIAL_PLAYERS_COUNT;
   let players = Map.new<Principal, Player.Player>();
   let authorizedPrincipals = Map.new<Principal, ()>();
+  
+  // Stable storage for X username to Principal mapping
+  var xUsernameToPrincipalEntries : [(Text, Principal)] = [];
+  
+  // Runtime TrieMap rebuilt from stable storage (transient - not persisted)
+  private transient var xUsernameToPrincipal = TrieMap.TrieMap<Text, Principal>(Text.equal, Text.hash);
+  
+  // Save TrieMap to stable storage before upgrade
+  system func preupgrade() {
+    xUsernameToPrincipalEntries := Iter.toArray(xUsernameToPrincipal.entries());
+  };
+  
+  // Rebuild TrieMap from stable storage after upgrade
+  system func postupgrade() {
+    xUsernameToPrincipal := TrieMap.TrieMap<Text, Principal>(Text.equal, Text.hash);
+    for ((username, principal) in xUsernameToPrincipalEntries.vals()) {
+      xUsernameToPrincipal.put(username, principal);
+    };
+  };
 
   // Initialize authorized principals (by default the initializer is authorized)
   // Add authorized principals via the "addAuthorizedPrincipal" method
@@ -124,6 +146,20 @@ shared ({ caller = initializer }) persistent actor class Players() = this {
         return #err("Player not found");
       };
       case (?player) {
+        // Check if username is already verified - reject in any case
+        let existingPrincipal = xUsernameToPrincipal.get(username);
+        switch (existingPrincipal) {
+          case (?_) {
+            return #err("X username already verified by another account");
+          };
+          case (null) {
+            // Username not taken, proceed
+          };
+        };
+
+        // Add username mapping
+        xUsernameToPrincipal.put(username, player_id);
+
         let x_data : Player.XData = {
           username = username;
           avatar = avatar;

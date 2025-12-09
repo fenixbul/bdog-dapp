@@ -5,6 +5,8 @@ import { useAuthStore } from '@/store/auth-store';
 import { useWalletStore, type Token } from '@/store/wallet-store';
 import { TokenService, DEFAULT_TOKENS } from '@/lib/token/tokenService';
 import { useTokenData } from '@/providers/TokenDataProvider';
+import { ledgerStore } from '@/lib/token/ledgerStore';
+import { icpLedgerStore } from '@/lib/token/icpLedgerStore';
 
 // Token colors for icons (using chart colors from tailwind config)
 const TOKEN_COLORS = [
@@ -93,6 +95,13 @@ export function useWalletTokens() {
       setLoading(false);
     }
   };
+
+  // Clear ledger caches when identity changes (logout or login with different user)
+  useEffect(() => {
+    // Clear caches when identity becomes null (logout) or changes
+    ledgerStore.clearCache();
+    icpLedgerStore.clearCache();
+  }, [identity]);
 
   useEffect(() => {
     // Wait for token prices to finish loading (success or failure) before fetching tokens

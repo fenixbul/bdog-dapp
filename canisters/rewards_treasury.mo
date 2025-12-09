@@ -14,9 +14,9 @@ import Types "types/treasury";
 import ICRC "ICRC";
 import accessControl "modules/accessControl";
 
-/// Treasury canister for DAO financial management
+/// Rewards Treasury canister for managing rewards tokens
 /// Provides secure storage and management of treasury assets and transaction logs
-shared ({ caller = initializer }) persistent actor class Treasury() = this {
+shared ({ caller = initializer }) persistent actor class RewardsTreasury() = this {
   //============================================================================
   // STABLE STORAGE LAYER
   //============================================================================

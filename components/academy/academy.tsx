@@ -50,18 +50,6 @@ export function Academy() {
       return;
     }
 
-    // If not authenticated, open connect modal
-    if (!isAuthenticated) {
-      openConnectModal();
-      setIsLoadingModule(false);
-      return;
-    }
-
-    // If authenticated, wait for identity replacement
-    if (!isIdentityReplaced) {
-      return;
-    }
-
     setIsLoadingModule(true);
     try {
       const fetchedModuleWithState = await skillModuleService.getModule(1n);
@@ -108,12 +96,20 @@ export function Academy() {
     } finally {
       setIsLoadingModule(false);
     }
-  }, [isInitialized, isAuthenticated, isIdentityReplaced, skillModuleService, openConnectModal]);
+  }, [isInitialized, skillModuleService]);
 
-  // Watch for auth initialization and identity replacement, then fetch module
+  // Watch for auth initialization, then fetch module
   useEffect(() => {
     fetchModule();
   }, [fetchModule]);
+
+  // Watch for actor identity state changes and refetch module
+  // Covers both login (isIdentityReplaced: false -> true) and logout (true -> false)
+  useEffect(() => {
+    if (isInitialized) {
+      fetchModule();
+    }
+  }, [isIdentityReplaced, isInitialized, fetchModule]);
 
   // Handle module completion - refetch module state after quiz passes
   const handleModuleCompleted = async () => {
@@ -160,6 +156,11 @@ export function Academy() {
   };
 
   const handleStartJourney = () => {
+    if (!isAuthenticated) {
+      openConnectModal();
+      return;
+    }
+    
     if (lessons.length > 0) {
       setSelectedLesson(lessons[0]);
       setIsModalOpen(true);

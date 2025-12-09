@@ -1,4 +1,5 @@
 import { ActorBaseService } from "./ActorBaseService";
+import type { ActorConfig } from "./ActorBaseService";
 import { idlFactory } from "@/lib/canisters/skill_module";
 import type { _SERVICE as SkillModuleServiceType } from "@/lib/canisters/skill_module/skill_module.did";
 import type {
@@ -24,6 +25,46 @@ import type { Principal } from "@dfinity/principal";
 export class SkillModuleService extends ActorBaseService<SkillModuleServiceType> {
   protected canisterName = "skill_module";
   protected idlFactory = idlFactory;
+
+  /**
+   * Actor configuration for SkillModule service.
+   * - Can work with anonymous identity (read-only operations)
+   * - Requires authenticated identity for write operations (complete modules, take quizzes)
+   * - Lazy initialization (created on first access)
+   */
+  protected actorConfig: ActorConfig = {
+    requiresAuth: false,
+    initOnMount: false,
+    canUseAnonymous: true,
+    priority: 'normal',
+  };
+
+  /**
+   * Override getActor() to use dual-identity pattern.
+   * Returns anonymous actor when not authenticated, authenticated actor when logged in.
+   * This allows SkillModuleService to work with both identities seamlessly.
+   * 
+   * @returns Promise resolving to appropriate actor instance based on authentication state
+   */
+  protected async getActor(): Promise<SkillModuleServiceType> {
+    const isAuthenticated = this._isAuthenticated();
+
+    if (isAuthenticated) {
+      // User is authenticated - use authenticated actor
+      const identity = this._getCurrentIdentity();
+      if (!identity) {
+        // Fallback to anonymous if identity is somehow invalid
+        console.log('[SkillModuleService] ⚠️ FALLBACK: Invalid identity, using anonymous');
+        return await this._initAnonymousActor();
+      }
+      console.log('[SkillModuleService] 🔐 GET ACTOR: Using authenticated');
+      return await this._initAuthenticatedActor(identity);
+    } else {
+      // User is not authenticated - use anonymous actor
+      console.log('[SkillModuleService] 🔓 GET ACTOR: Using anonymous');
+      return await this._initAnonymousActor();
+    }
+  }
 
   /**
    * Get a module by ID with user completion state.

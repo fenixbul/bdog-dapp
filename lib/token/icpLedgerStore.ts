@@ -7,9 +7,12 @@ class ICPLedgerStore {
 
   async getCanister(agent: HttpAgent, canisterId: Principal): Promise<LedgerCanister> {
     const canisterIdString = canisterId.toString();
+    // Include agent identity in cache key to prevent stale actor identity issues
+    const agentPrincipal = (await agent.getPrincipal()).toText();
+    const cacheKey = `${canisterIdString}-${agentPrincipal}`;
     
-    if (this.canisters.has(canisterIdString)) {
-      return this.canisters.get(canisterIdString)!;
+    if (this.canisters.has(cacheKey)) {
+      return this.canisters.get(cacheKey)!;
     }
 
     // Create real ICP ledger canister instance
@@ -18,7 +21,7 @@ class ICPLedgerStore {
       canisterId
     });
 
-    this.canisters.set(canisterIdString, ledgerCanister);
+    this.canisters.set(cacheKey, ledgerCanister);
     return ledgerCanister;
   }
 

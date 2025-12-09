@@ -1,11 +1,13 @@
 'use client';
 
-import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
+import { createContext, useContext, useEffect, useState, useRef, type ReactNode } from 'react';
 import { Actor } from '@dfinity/agent';
+import type { Identity } from '@dfinity/agent';
 import { useAuthStore } from '@/store/auth-store';
 import { SkillModuleService } from '@/lib/services/actors/SkillModuleService';
 import { PlayerService } from '@/lib/services/actors/PlayerService';
 import type { ActorBaseService } from '@/lib/services/actors/ActorBaseService';
+import { ActorManager } from '@/lib/services/actors/ActorManager';
 
 /**
  * Service instances available through the context.
@@ -46,6 +48,7 @@ interface ActorServiceProviderProps {
 export function ActorServiceProvider({ children }: ActorServiceProviderProps) {
   const { identity, isAuthenticated } = useAuthStore();
   const [isIdentityReplaced, setIsIdentityReplaced] = useState(false);
+  const prevAuthRef = useRef(isAuthenticated);
 
   // Create service instances (singletons)
   const [services] = useState<ServiceInstances>(() => ({
@@ -54,67 +57,104 @@ export function ActorServiceProvider({ children }: ActorServiceProviderProps) {
     // Future services initialized here
   }));
 
+  // Create ActorManager instance (singleton)
+  // Phase 8: ActorManager is now the primary system managing all services
+  const actorManagerRef = useRef<ActorManager | null>(null);
+  if (!actorManagerRef.current) {
+    actorManagerRef.current = new ActorManager();
+  }
+  const actorManager = actorManagerRef.current;
+
+  // Register all services with ActorManager
+  // Phase 8: All services registered and managed by ActorManager
+  useEffect(() => {
+    actorManager.registerServices({
+      skillModuleService: {
+        service: services.skillModuleService,
+        config: services.skillModuleService.config,
+      },
+      playerService: {
+        service: services.playerService,
+        config: services.playerService.config,
+      },
+    });
+
+    if (process.env.NODE_ENV === 'development') {
+      console.log('[ActorServiceProvider] All services registered with ActorManager');
+    }
+  }, [actorManager, services]);
+
   /**
-   * Replace identity on all actors managed by all services.
+   * @deprecated Phase 8: Manual identity replacement removed.
+   * All services are now managed by ActorManager.
+   * This function is kept for reference but no longer called.
    */
   const replaceActorIdentities = async () => {
-    if (!identity) {
-      return;
-    }
-
-    try {
-      // Collect all services that extend ActorBaseService
-      const serviceInstances: ActorBaseService<any>[] = [
-        services.skillModuleService,
-        services.playerService,
-        // Add future services here
-      ];
-
-      // Collect all actors from all services
-      const allActors: Array<{ name: string; actor: any }> = [];
-      for (const service of serviceInstances) {
-        const actors = await service.getAllActors();
-        allActors.push(...actors);
-      }
-
-      // Replace identity on each actor
-      for (const { name, actor } of allActors) {
-        try {
-          const agent = Actor.agentOf(actor);
-          await agent.replaceIdentity(identity);
-          console.log(`Identity replaced for actor: ${name}`);
-        } catch (error) {
-          console.error(`Failed to replace identity for actor ${name}:`, error);
-        }
-      }
-
-      setIsIdentityReplaced(true);
-    } catch (error) {
-      console.error('Error replacing actor identities:', error);
-    }
+    // Phase 8: All services now managed by ActorManager
+    // This function is deprecated and no longer used
+    console.warn('[ActorServiceProvider] replaceActorIdentities is deprecated. Use ActorManager instead.');
   };
 
   /**
-   * Watch for identity changes and replace identity on all actors.
-   * Only replaces identity once per authentication session.
-   * Only runs when authenticated.
+   * @deprecated Phase 8: Manual cache clearing removed.
+   * All services are now managed by ActorManager.
+   * This function is kept for reference but no longer called.
    */
-  useEffect(() => {
-    if (!isAuthenticated || !identity || isIdentityReplaced) {
-      return;
-    }
-
-    replaceActorIdentities();
-  }, [identity, isAuthenticated, isIdentityReplaced]);
+  const clearActorCaches = () => {
+    // Phase 8: All services now managed by ActorManager
+    // This function is deprecated and no longer used
+    console.warn('[ActorServiceProvider] clearActorCaches is deprecated. Use ActorManager instead.');
+  };
 
   /**
-   * Reset identity replacement flag when user logs out.
+   * @deprecated Phase 8: Manual identity replacement removed.
+   * ActorManager now handles all identity changes.
+   * This effect is kept for reference but disabled.
+   */
+  // useEffect(() => {
+  //   // Phase 8: Disabled - ActorManager handles identity replacement
+  //   if (!isAuthenticated || !identity || isIdentityReplaced) {
+  //     return;
+  //   }
+  //   replaceActorIdentities();
+  // }, [identity, isAuthenticated, isIdentityReplaced]);
+
+  /**
+   * Phase 8: Initialize all actors with ActorManager.
+   * ActorManager now handles both SkillModuleService and PlayerService lifecycle.
+   * All services use the new dual-identity pattern managed by ActorManager.
    */
   useEffect(() => {
-    if (!isAuthenticated || !identity) {
-      setIsIdentityReplaced(false);
+    // Initialize actors with current identity (null = anonymous)
+    const currentIdentity = isAuthenticated && identity ? identity : null;
+    const identityType = currentIdentity ? 'authenticated' : 'anonymous';
+    
+    console.log(`[ActorServiceProvider] 🔐 IDENTITY CHANGE: ${identityType} (isAuthenticated: ${isAuthenticated})`);
+    
+    // ActorManager handles all services initialization
+    actorManager.initializeActors(currentIdentity).catch((error) => {
+      console.error('[ActorServiceProvider] ❌ INIT ERROR:', error);
+    });
+  }, [actorManager, isAuthenticated, identity]);
+
+  /**
+   * Clear authenticated actors when user logs out.
+   * Phase 8: ActorManager handles cleanup for all services.
+   */
+  useEffect(() => {
+    const wasAuthenticated = prevAuthRef.current;
+    const isNowAnonymous = !isAuthenticated || !identity;
+    
+    // Only log logout when transitioning from authenticated to anonymous
+    if (wasAuthenticated && isNowAnonymous) {
+      console.log('[ActorServiceProvider] 🚪 LOGOUT: Clearing authenticated actors');
+      actorManager.clearAuthenticatedActors().catch((error) => {
+        console.error('[ActorServiceProvider] ❌ CLEAR ERROR:', error);
+      });
     }
-  }, [isAuthenticated, identity]);
+    
+    prevAuthRef.current = isAuthenticated;
+  }, [isAuthenticated, identity, actorManager]);
 
   return (
     <ActorServiceContext.Provider value={{ ...services, isIdentityReplaced }}>
@@ -144,4 +184,5 @@ export function useActorServices(): ActorServices {
   
   return context;
 }
+
 
