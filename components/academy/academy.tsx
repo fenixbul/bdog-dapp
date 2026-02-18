@@ -29,10 +29,11 @@ export function Academy() {
   const [isLoadingModule, setIsLoadingModule] = useState(true);
   const [lessons, setLessons] = useState<Lesson[]>([]);
   const [moduleWithUserState, setModuleWithUserState] = useState<ModuleWithUserState | null>(null);
-  const { skillModuleService, isIdentityReplaced } = useActorServices();
+  const { skillModuleService } = useActorServices();
   const { 
     isInitialized, 
     isAuthenticated, 
+    principal,
     openConnectModal 
   } = useAuthStore();
   const { 
@@ -90,9 +91,16 @@ export function Academy() {
             }
           });
         setLessons(mappedLessons);
+      } else {
+        // Clear state if no module returned
+        setModuleWithUserState(null);
+        setLessons([]);
       }
     } catch (error) {
       console.error('Error fetching module:', error);
+      // Clear state on error
+      setModuleWithUserState(null);
+      setLessons([]);
     } finally {
       setIsLoadingModule(false);
     }
@@ -103,13 +111,19 @@ export function Academy() {
     fetchModule();
   }, [fetchModule]);
 
-  // Watch for actor identity state changes and refetch module
-  // Covers both login (isIdentityReplaced: false -> true) and logout (true -> false)
+  // Watch for identity changes (login/logout/switch identity) and refetch module
   useEffect(() => {
-    if (isInitialized) {
-      fetchModule();
+    if (!isInitialized) {
+      return;
     }
-  }, [isIdentityReplaced, isInitialized, fetchModule]);
+    
+    // Clear state immediately when principal changes
+    setModuleWithUserState(null);
+    setLessons([]);
+    
+    // Refetch module for new identity
+    fetchModule();
+  }, [principal, isInitialized, fetchModule]);
 
   // Handle module completion - refetch module state after quiz passes
   const handleModuleCompleted = async () => {
