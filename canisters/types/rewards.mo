@@ -24,7 +24,6 @@ module {
     id : Nat;
     userId : Principal;
     rewardType : RewardType;
-    moduleId : ?Nat; // Optional, only for #ModulePassed
     token : Principal; // Token canister ID
     amount : Nat;
     claimedAt : Time.Time;
@@ -36,6 +35,7 @@ module {
     rewardType : RewardType;
     token : Principal; // Token canister ID
     amount : Nat; // Fixed reward amount
+    verificationCanisterId : Principal; // Canister that verifies eligibility
   };
 
   /// Error types for rewards operations
@@ -49,6 +49,7 @@ module {
     #TransferError : ICRCTransferError;
     #ConditionNotMet : Text; // Reason why condition not met
     #GetBalanceError : Text;
+    #VerificationError : Text; // Error from verification canister
   };
 
   // ICRC TransferError type definition (matches ICRC.TransferError structure)
