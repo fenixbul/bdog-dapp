@@ -66,3 +66,6 @@ echo "📦 Internet Identity canister ID: $II_ID"
 echo "🌐 URL: http://${II_ID}.localhost:4943"
 echo ""
 
+
+
+

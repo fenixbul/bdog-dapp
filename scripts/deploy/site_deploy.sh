@@ -99,3 +99,6 @@ echo "🌐 Frontend URL: http://${SITE_ID}.localhost:8080"
 echo "   Candid UI: http://localhost:8080/?canisterId=$SITE_ID"
 echo ""
 
+
+
+
